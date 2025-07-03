@@ -16,7 +16,6 @@
   <a href="https://github.com/eliatolin/remote_caching">
     <img src="https://img.shields.io/github/stars/eliatolin/remote_caching?style=social" alt="GitHub Stars" />
   </a>
-  <a href="https://pub.dev/packages/remote_caching"><img src="https://img.shields.io/pub/v/remote_caching.svg"></a>
   <a href="https://github.com/eliatolin/remote_caching/actions"><img src="https://github.com/eliatolin/remote_caching/actions/workflows/test.yml/badge.svg"></a>
 </p>
 
@@ -39,6 +38,11 @@ A lightweight yet powerful Flutter package for caching asynchronous remote calls
 - 📊 **Cache statistics API**  
 - 🧪 **Test-friendly** and easy to debug (`verboseMode`)  
 
+## ❗ Why RemoteCaching?
+
+- 🔍 You need **structured, persistent caching** for remote API calls
+- 💡 You want **control** over serialization and expiration
+- 🧼 You don’t want to reinvent the wheel each time you need simple cache logic
 
 ## 🚀 Getting Started
 
@@ -75,7 +79,7 @@ final user = await RemoteCaching.instance.call<UserProfile>(
   'user_profile',
   cacheDuration: Duration(minutes: 30), // Optional
   remote: () async => await fetchUserProfile(),
-  fromJson: (json) => UserProfile.fromJson(json as Map<String, dynamic>),
+  fromJson: (json) => UserProfile.fromJson(json as Map<String, dynamic>), // Optional
 );
 ```
 
@@ -89,8 +93,7 @@ final user = await RemoteCaching.instance.call<UserProfile>(
 await RemoteCaching.instance.call(
   'user_profile',
   forceRefresh: true,
-  remote: () async => await fetchUserProfile(),
-  fromJson: (json) => UserProfile.fromJson(json as Map<String, dynamic>),
+  remote: () async => await fetchUserProfile()
 );
 ```
 

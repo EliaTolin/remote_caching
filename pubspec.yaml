@@ -6,7 +6,10 @@ platforms:
   android:
   ios:
   macos:
-  
+  linux:
+  web:
+  windows:
+
 environment:
   sdk: ^3.8.1
   flutter: ">=1.17.0"

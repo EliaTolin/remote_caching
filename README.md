@@ -16,6 +16,8 @@
   <a href="https://github.com/eliatolin/remote_caching">
     <img src="https://img.shields.io/github/stars/eliatolin/remote_caching?style=social" alt="GitHub Stars" />
   </a>
+  <a href="https://pub.dev/packages/remote_caching"><img src="https://img.shields.io/pub/v/remote_caching.svg"></a>
+  <a href="https://github.com/eliatolin/remote_caching/actions"><img src="https://github.com/eliatolin/remote_caching/actions/workflows/test.yml/badge.svg"></a>
 </p>
 
 ---

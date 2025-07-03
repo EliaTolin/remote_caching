@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="assets/logo.png" alt="Remote Caching Logo" width="120" />
+  <img src="assets/logo.png" alt="Remote Caching Logo" width="240" />
 </div>
 
 # Remote Caching 🔁

@@ -1,15 +1,28 @@
-<div align="center">
-  <img src="assets/logo.png" alt="Remote Caching Logo" width="240" />
-</div>
+<p align="center">
+  <img src="https://raw.githubusercontent.com/eliatolin/remote_caching/main/assets/logo.png" width="220px" alt="Remote Caching logo" />
+</p>
 
-# Remote Caching 🔁
+<h1 align="center">Remote Caching</h1>
 
-[![pub package](https://img.shields.io/pub/v/remote_caching.svg)](https://pub.dev/packages/remote_caching)
-[![GitHub stars](https://img.shields.io/github/stars/eliatoli/remote_caching?style=social)](https://github.com/eliatoli/remote_caching)
+<p align="center">
+  <strong>A lightweight, flexible, and persistent cache layer for remote API calls in Flutter.</strong><br />
+  Avoid redundant network calls. Boost performance. Cache smartly.
+</p>
+
+<p align="center">
+  <a href="https://pub.dev/packages/remote_caching">
+    <img src="https://img.shields.io/pub/v/remote_caching.svg" alt="Pub Version" />
+  </a>
+  <a href="https://github.com/eliatolin/remote_caching">
+    <img src="https://img.shields.io/github/stars/eliatolin/remote_caching?style=social" alt="GitHub Stars" />
+  </a>
+</p>
+
+---
 
 A lightweight yet powerful Flutter package for caching asynchronous remote calls locally using SQLite — with full support for expiration, serialization, and custom deserializers.
 
-> Save your API responses. Avoid unnecessary network calls. Go fast. Stay clean.
+> 🧠 Save your API responses. 🔁 Avoid unnecessary calls. ⚡ Go fast. 💡 Stay clean.
 
 ---
 

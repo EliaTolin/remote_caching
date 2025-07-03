@@ -142,6 +142,9 @@ A: Yes! Just provide a `fromJson` function and ensure your model supports `toJso
 **Q: Does it work offline?**  
 A: Cached data is available offline until it expires or is cleared.
 
+**Q: Does it work on all platforms?**  
+A: We use [sqlite3](https://pub.dev/packages/sqflite) with [sqflite_common_ffi](https://pub.dev/packages/sqflite_common_ffi) to support all platforms. Refer to the packages docs for more information.
+
 ---
 
 ## 🤝 Contributing

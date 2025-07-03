@@ -1,3 +1,7 @@
+<div align="center">
+  <img src="assets/logo.png" alt="Remote Caching Logo" width="120" />
+</div>
+
 # Remote Caching 🔁
 
 [![pub package](https://img.shields.io/pub/v/remote_caching.svg)](https://pub.dev/packages/remote_caching)

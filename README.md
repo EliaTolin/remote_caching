@@ -76,7 +76,7 @@ flutter pub get
 ```dart
 await RemoteCaching.instance.init(
   defaultCacheDuration: Duration(hours: 1), // Optional
-  verboseMode: true, // Optional: see logs in your console
+  verboseMode: true, // Optional: see RemoteCaching logs in your console, default is enabled only in debug mode
 );
 ```
 

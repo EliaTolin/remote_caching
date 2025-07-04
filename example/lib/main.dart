@@ -1,7 +1,8 @@
-import 'package:flutter/material.dart';
-import 'package:remote_caching/remote_caching.dart';
-import 'package:http/http.dart' as http;
 import 'dart:convert';
+
+import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:remote_caching/remote_caching.dart';
 
 void main() {
   runApp(const MyApp());
@@ -120,6 +121,7 @@ class _AgePredictionPageState extends State<AgePredictionPage> {
   Future<void> _showCacheStats() async {
     try {
       final stats = await RemoteCaching.instance.getCacheStats();
+
       if (mounted) {
         showDialog(
           context: context,

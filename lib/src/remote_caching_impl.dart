@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'dart:developer';
 
 import 'package:path/path.dart';
-import 'package:remote_caching/src/model/caching_stats.dart';
+import 'package:remote_caching/src/models/caching_stats.dart';
 import 'package:sqflite/sqflite.dart';
 
 // Export the main class

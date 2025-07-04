@@ -1,16 +1,18 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:remote_caching/remote_caching.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
+@immutable
 class TestData {
-  final String name;
-  final int age;
-  TestData({required this.name, required this.age});
-
-  Map<String, dynamic> toJson() => {'name': name, 'age': age};
+  const TestData({required this.name, required this.age});
 
   factory TestData.fromJson(Map<String, dynamic> json) =>
       TestData(name: json['name'], age: json['age']);
+  final String name;
+  final int age;
+
+  Map<String, dynamic> toJson() => {'name': name, 'age': age};
 
   @override
   bool operator ==(Object other) =>
@@ -25,12 +27,12 @@ class TestData {
 }
 
 class BadSerializable {
-  final String value;
   BadSerializable(this.value);
 
-  factory BadSerializable.fromJson(Map<String, dynamic> json) {
+  factory BadSerializable.fromJson() {
     throw Exception('Deserialization failed!');
   }
+  final String value;
 
   Map<String, dynamic> toJson() {
     throw Exception('Serialization failed!');
@@ -38,12 +40,12 @@ class BadSerializable {
 }
 
 class GoodSerializable {
-  final String value;
   GoodSerializable(this.value);
 
   factory GoodSerializable.fromJson(Map<String, dynamic> json) {
     return GoodSerializable(json['value'] as String);
   }
+  final String value;
 
   Map<String, dynamic> toJson() => {'value': value};
 }
@@ -74,7 +76,7 @@ void main() {
     });
 
     test('should initialize with custom cache duration', () async {
-      final customDuration = Duration(minutes: 30);
+      const customDuration = Duration(minutes: 30);
       await RemoteCaching.instance.init(defaultCacheDuration: customDuration);
       expect(RemoteCaching.instance, isNotNull);
     });
@@ -103,10 +105,10 @@ void main() {
       await RemoteCaching.instance.call<dynamic>(
         'test_key',
         remote: () async => testData,
-        cacheDuration: Duration(milliseconds: 100),
+        cacheDuration: const Duration(milliseconds: 100),
       );
       // Wait for cache to expire
-      await Future.delayed(Duration(milliseconds: 400));
+      await Future.delayed(const Duration(milliseconds: 400));
       // This should call remote function again
       final newData = {'name': 'Jane'};
       final result = await RemoteCaching.instance.call<dynamic>(
@@ -121,10 +123,7 @@ void main() {
       final testData1 = {'name': 'John'};
       final testData2 = {'name': 'Jane'};
       // First call
-      await RemoteCaching.instance.call<dynamic>(
-        'test_key',
-        remote: () async => testData1,
-      );
+      await RemoteCaching.instance.call<dynamic>('test_key', remote: () async => testData1);
       // Force refresh
       final result = await RemoteCaching.instance.call<dynamic>(
         'test_key',
@@ -140,11 +139,11 @@ void main() {
       // Call with custom duration
       await RemoteCaching.instance.call<dynamic>(
         'test_key',
-        cacheDuration: Duration(milliseconds: 200),
+        cacheDuration: const Duration(milliseconds: 200),
         remote: () async => testData,
       );
       // Wait less than custom duration
-      await Future.delayed(Duration(milliseconds: 100));
+      await Future.delayed(const Duration(milliseconds: 100));
       // Should still return cached data
       final result = await RemoteCaching.instance.call<dynamic>(
         'test_key',
@@ -158,14 +157,8 @@ void main() {
       final testData1 = {'name': 'John'};
       final testData2 = {'name': 'Jane'};
       // Cache two different keys
-      await RemoteCaching.instance.call<dynamic>(
-        'key1',
-        remote: () async => testData1,
-      );
-      await RemoteCaching.instance.call<dynamic>(
-        'key2',
-        remote: () async => testData2,
-      );
+      await RemoteCaching.instance.call<dynamic>('key1', remote: () async => testData1);
+      await RemoteCaching.instance.call<dynamic>('key2', remote: () async => testData2);
       // Clear only key1
       await RemoteCaching.instance.clearCacheForKey('key1');
       // key1 should call remote function again
@@ -188,14 +181,8 @@ void main() {
       final testData1 = {'name': 'John'};
       final testData2 = {'name': 'Jane'};
       // Cache two different keys
-      await RemoteCaching.instance.call<dynamic>(
-        'key1',
-        remote: () async => testData1,
-      );
-      await RemoteCaching.instance.call<dynamic>(
-        'key2',
-        remote: () async => testData2,
-      );
+      await RemoteCaching.instance.call<dynamic>('key1', remote: () async => testData1);
+      await RemoteCaching.instance.call<dynamic>('key2', remote: () async => testData2);
       // Clear all cache
       await RemoteCaching.instance.clearCache();
       // Both keys should call remote function again
@@ -244,10 +231,7 @@ void main() {
     test('should throw error if not initialized', () async {
       await RemoteCaching.instance.dispose();
       expect(
-        () => RemoteCaching.instance.call<dynamic>(
-          'test_key',
-          remote: () async => 'data',
-        ),
+        () => RemoteCaching.instance.call<dynamic>('test_key', remote: () async => 'data'),
         throwsA(isA<StateError>()),
       );
     });
@@ -255,14 +239,8 @@ void main() {
     test('should get cache statistics', () async {
       await RemoteCaching.instance.init();
       // Add some data to cache
-      await RemoteCaching.instance.call<dynamic>(
-        'key1',
-        remote: () async => {'data': 'value1'},
-      );
-      await RemoteCaching.instance.call<dynamic>(
-        'key2',
-        remote: () async => {'data': 'value2'},
-      );
+      await RemoteCaching.instance.call<dynamic>('key1', remote: () async => {'data': 'value1'});
+      await RemoteCaching.instance.call<dynamic>('key2', remote: () async => {'data': 'value2'});
       final stats = await RemoteCaching.instance.getCacheStats();
       expect(stats.totalEntries, equals(2));
       expect(stats.totalSizeBytes, greaterThan(0));
@@ -277,11 +255,11 @@ void main() {
       await RemoteCaching.instance.call<dynamic>(
         'test_key',
         remote: () async => testData,
-        cacheDuration: Duration(milliseconds: 100),
+        cacheDuration: const Duration(milliseconds: 100),
       );
 
       // Aspetta che scada
-      await Future.delayed(Duration(milliseconds: 300));
+      await Future.delayed(const Duration(milliseconds: 300));
 
       // Forza accesso per attivare la rimozione
       final result = await RemoteCaching.instance.call<dynamic>(
@@ -304,11 +282,11 @@ void main() {
       await RemoteCaching.instance.call<dynamic>(
         'test_key',
         remote: () async => testData,
-        cacheDuration: Duration(milliseconds: 100),
+        cacheDuration: const Duration(milliseconds: 100),
       );
 
       // Aspetta che scada
-      await Future.delayed(Duration(milliseconds: 300));
+      await Future.delayed(const Duration(milliseconds: 300));
 
       // Forza accesso per attivare la rimozione
       final result = await RemoteCaching.instance.call<dynamic>(
@@ -333,10 +311,7 @@ void main() {
 
       expect(result1, equals('hello world'));
 
-      final result2 = await RemoteCaching.instance.call<int>(
-        'int_key',
-        remote: () async => 123,
-      );
+      final result2 = await RemoteCaching.instance.call<int>('int_key', remote: () async => 123);
 
       expect(result2, equals(123));
     });
@@ -384,10 +359,7 @@ void main() {
     test('should overwrite cached data on second call', () async {
       await RemoteCaching.instance.init();
 
-      await RemoteCaching.instance.call<dynamic>(
-        'overwrite_key',
-        remote: () async => {'value': 1},
-      );
+      await RemoteCaching.instance.call<dynamic>('overwrite_key', remote: () async => {'value': 1});
 
       await RemoteCaching.instance.call<dynamic>(
         'overwrite_key',
@@ -405,7 +377,7 @@ void main() {
 
     group('TestData Tests', () {
       test('should serialize and deserialize', () async {
-        final testData = TestData(name: 'John', age: 30);
+        const testData = TestData(name: 'John', age: 30);
         final result = await RemoteCaching.instance.call<TestData>(
           'test_key',
           remote: () async => testData,
@@ -415,70 +387,64 @@ void main() {
 
       test('TestData should use custom cache duration', () async {
         await RemoteCaching.instance.init();
-        final testData = TestData(name: 'John', age: 30);
+        const testData = TestData(name: 'John', age: 30);
 
         await RemoteCaching.instance.call<TestData>(
           'test_key',
-          cacheDuration: Duration(milliseconds: 200),
+          cacheDuration: const Duration(milliseconds: 200),
           remote: () async => testData,
-          fromJson: (json) => TestData.fromJson(json as Map<String, dynamic>),
+          fromJson: (json) => TestData.fromJson(json! as Map<String, dynamic>),
         );
 
-        await Future.delayed(Duration(milliseconds: 100));
+        await Future.delayed(const Duration(milliseconds: 100));
 
         // Proverà a usare la cache, quindi ritornerà ancora 'John'
         final result = await RemoteCaching.instance.call<TestData>(
           'test_key',
-          remote: () async => TestData(name: 'Jane', age: 25),
-          fromJson: (json) => TestData.fromJson(json as Map<String, dynamic>),
+          remote: () async => const TestData(name: 'Jane', age: 25),
+          fromJson: (json) => TestData.fromJson(json! as Map<String, dynamic>),
         );
 
         expect(result, equals(testData));
       });
     });
 
-    test(
-      'If deserialization fails, cache is ignored and remote is called',
-      () async {
-        int remoteCalls = 0;
-        // First call: saves to cache (serialization will fail later)
-        await RemoteCaching.instance.call<BadSerializable>(
-          'test_deser',
-          remote: () async {
-            remoteCalls++;
-            return BadSerializable('ok');
-          },
-          fromJson: (json) =>
-              BadSerializable.fromJson(json as Map<String, dynamic>),
-          cacheDuration: const Duration(minutes: 5),
-        );
-        // Second call: deserialization fails, so remote is called again
-        await RemoteCaching.instance.call<BadSerializable>(
-          'test_deser',
-          remote: () async {
-            remoteCalls++;
-            return BadSerializable('ok2');
-          },
-          fromJson: (json) =>
-              BadSerializable.fromJson(json as Map<String, dynamic>),
-          cacheDuration: const Duration(minutes: 5),
-        );
-        expect(remoteCalls, 2);
-      },
-    );
+    test('If deserialization fails, cache is ignored and remote is called', () async {
+      var remoteCalls = 0;
+      // First call: saves to cache (serialization will fail later)
+      await RemoteCaching.instance.call<BadSerializable>(
+        'test_deser',
+        remote: () async {
+          remoteCalls++;
+          return BadSerializable('ok');
+        },
+        fromJson: (json) => BadSerializable.fromJson(),
+        cacheDuration: const Duration(minutes: 5),
+      );
+      // Second call: deserialization fails, so remote is called again
+      await RemoteCaching.instance.call<BadSerializable>(
+        'test_deser',
+        remote: () async {
+          remoteCalls++;
+          return BadSerializable('ok2');
+        },
+        fromJson: (json) => BadSerializable.fromJson(),
+        cacheDuration: const Duration(minutes: 5),
+      );
+      expect(remoteCalls, 2);
+    });
 
     test(
       'If serialization fails, data is not saved in cache but remote result is still returned',
       () async {
-        int remoteCalls = 0;
+        var remoteCalls = 0;
         final result = await RemoteCaching.instance.call<BadSerializable>(
           'test_ser',
           remote: () async {
             remoteCalls++;
             return BadSerializable('fail');
           },
-          fromJson: (json) =>
-              BadSerializable.fromJson(json as Map<String, dynamic>),
+          fromJson: (json) => BadSerializable.fromJson(),
           cacheDuration: const Duration(minutes: 5),
         );
         expect(result.value, 'fail');
@@ -489,8 +455,7 @@ void main() {
             remoteCalls++;
             return BadSerializable('fail2');
           },
-          fromJson: (json) =>
-              BadSerializable.fromJson(json as Map<String, dynamic>),
+          fromJson: (json) => BadSerializable.fromJson(),
           cacheDuration: const Duration(minutes: 5),
         );
         expect(result2.value, 'fail2');

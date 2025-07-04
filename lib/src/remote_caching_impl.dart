@@ -1,9 +1,10 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
+
+import 'package:path/path.dart';
 import 'package:remote_caching/src/model/caching_stats.dart';
 import 'package:sqflite/sqflite.dart';
-import 'package:path/path.dart';
 
 // Export the main class
 export 'remote_caching_impl.dart' show RemoteCaching;
@@ -21,9 +22,9 @@ export 'remote_caching_impl.dart' show RemoteCaching;
 /// );
 /// ```
 class RemoteCaching {
-  static final RemoteCaching _instance = RemoteCaching._internal();
   factory RemoteCaching() => _instance;
   RemoteCaching._internal();
+  static final RemoteCaching _instance = RemoteCaching._internal();
 
   static RemoteCaching get instance => _instance;
 
@@ -94,12 +95,12 @@ class RemoteCaching {
     );
 
     if (result != null && result.isNotEmpty) {
-      final expiresAt = result.first['expires_at'] as int;
+      final expiresAt = result.first['expires_at']! as int;
       if (expiresAt > now) {
         if (_verboseMode) {
           log('Cached data found for key: $key');
         }
-        final dataString = result.first['data'] as String;
+        final dataString = result.first['data']! as String;
         try {
           final decoded = jsonDecode(dataString);
           if (fromJson != null) {
@@ -209,9 +210,9 @@ class RemoteCaching {
     );
 
     return CachingStats(
-      totalEntries: stats?.first['total_entries'] as int,
-      totalSizeBytes: stats?.first['total_size'] as int,
-      expiredEntries: expired?.first['expired_entries'] as int,
+      totalEntries: stats!.first['total_entries']! as int,
+      totalSizeBytes: stats.first['total_size']! as int,
+      expiredEntries: expired!.first['expired_entries']! as int,
     );
   }
 

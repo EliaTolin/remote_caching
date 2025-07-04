@@ -10,6 +10,9 @@
 </p>
 
 <p align="center">
+  <a href="https://pub.dev/packages/very_good_analysis">
+    <img src="https://img.shields.io/badge/style-very_good_analysis-B22C89.svg" alt="Very Good Analysis" />
+  </a>
   <a href="https://pub.dev/packages/remote_caching">
     <img src="https://img.shields.io/pub/v/remote_caching.svg" alt="Pub Version" />
   </a>

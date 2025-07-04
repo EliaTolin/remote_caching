@@ -55,9 +55,8 @@ A lightweight yet powerful Flutter package for caching asynchronous remote calls
 
 Add to your `pubspec.yaml`:
 
-```yaml
-dependencies:
-  remote_caching: ^0.0.1
+```sh
+flutter pub add remote_caching
 ```
 
 Then run:

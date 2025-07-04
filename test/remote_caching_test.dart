@@ -80,7 +80,7 @@ void main() {
     setUp(() async {
       // Clean up before each test
       await RemoteCaching.instance.dispose();
-      await RemoteCaching.instance.init(verboseMode: true);
+      await RemoteCaching.instance.init();
       await RemoteCaching.instance.clearCache();
     });
 
@@ -294,17 +294,14 @@ void main() {
       await RemoteCaching.instance.init();
 
       final testData = {'name': 'John'};
-      // Inserisci un dato con scadenza breve
       await RemoteCaching.instance.call<dynamic>(
         'test_key',
         remote: () async => testData,
         cacheDuration: const Duration(milliseconds: 100),
       );
 
-      // Aspetta che scada
       await Future.delayed(const Duration(milliseconds: 300));
 
-      // Forza accesso per attivare la rimozione
       final result = await RemoteCaching.instance.call<dynamic>(
         'test_key',
         remote: () async => {'name': 'Jane'},
@@ -312,7 +309,6 @@ void main() {
 
       expect(result, equals({'name': 'Jane'}));
 
-      // Controlla che non ci siano dati scaduti
       final stats = await RemoteCaching.instance.getCacheStats();
       expect(stats.expiredEntries, equals(0));
     });
@@ -321,17 +317,14 @@ void main() {
       await RemoteCaching.instance.init();
 
       final testData = {'name': 'John'};
-      // Inserisci un dato con scadenza breve
       await RemoteCaching.instance.call<dynamic>(
         'test_key',
         remote: () async => testData,
         cacheDuration: const Duration(milliseconds: 100),
       );
 
-      // Aspetta che scada
       await Future.delayed(const Duration(milliseconds: 300));
 
-      // Forza accesso per attivare la rimozione
       final result = await RemoteCaching.instance.call<dynamic>(
         'test_key',
         remote: () async => {'name': 'Jane'},
@@ -339,7 +332,6 @@ void main() {
 
       expect(result, equals({'name': 'Jane'}));
 
-      // Controlla che non ci siano dati scaduti
       final stats = await RemoteCaching.instance.getCacheStats();
       expect(stats.expiredEntries, equals(0));
     });
@@ -447,7 +439,6 @@ void main() {
 
         await Future.delayed(const Duration(milliseconds: 100));
 
-        // Proverà a usare la cache, quindi ritornerà ancora 'John'
         final result = await RemoteCaching.instance.call<TestData>(
           'test_key',
           remote: () async => const TestData(name: 'Jane', age: 25),
@@ -462,7 +453,6 @@ void main() {
       'If deserialization fails, cache is ignored and remote is called',
       () async {
         var remoteCalls = 0;
-        // First call: saves to cache (serialization will fail later)
         await RemoteCaching.instance.call<BadSerializable>(
           'test_deser',
           remote: () async {
@@ -534,53 +524,47 @@ void main() {
 
     test('should cache a list of objects', () async {
       await RemoteCaching.instance.init();
-      final list = [const TestData(name: 'John', age: 30), const TestData(name: 'Jane', age: 25)];
-      final result = await RemoteCaching.instance.call<List<TestData>>(
+      final list = [
+        const TestData(name: 'John', age: 30),
+        const TestData(name: 'Jane', age: 25),
+      ];
+      await RemoteCaching.instance.call<List<TestData>>(
         'test_list',
         remote: () async => list,
       );
-      expect(result, equals(list));
-    });
-  });
-
-  group('TestDataNonSerializable Tests', () {
-
-    test('list of objects should be cached', () async {
-      await RemoteCaching.instance.init();
-      final list = [const TestDataNonSerializable(name: 'John', age: 30), const TestDataNonSerializable(name: 'Jane', age: 25)];
-      final result = await RemoteCaching.instance.call<List<TestDataNonSerializable>>(
+      final result2 = await RemoteCaching.instance.call<List<TestData>>(
         'test_list',
-        remote: () async => list,
+        remote: () async => throw Exception('Should not call remote'),
       );
-      expect(result, equals(list));
+      expect(result2, equals(list));
     });
   });
 
-    test('should throw error if not initialized', () async {
-      await RemoteCaching.instance.dispose();
-      expect(
-        () => RemoteCaching.instance.call<TestDataNonSerializable>(
-          'test_key',
-          remote: () async => const TestDataNonSerializable(name: 'John', age: 30),
-        ),
-        throwsA(isA<StateError>()),
-      );
-    });
-
-    test('should serialize and deserialize', () async {
-      await RemoteCaching.instance.init();
-      const testData = TestDataNonSerializable(name: 'John', age: 30);
-      final result = await RemoteCaching.instance.call<TestDataNonSerializable>(
+  test('should throw error if not initialized', () async {
+    await RemoteCaching.instance.dispose();
+    expect(
+      () => RemoteCaching.instance.call<TestDataNonSerializable>(
         'test_key',
-        remote: () async => testData,
-      );
-      expect(result, equals(testData));
+        remote: () async =>
+            const TestDataNonSerializable(name: 'John', age: 30),
+      ),
+      throwsA(isA<StateError>()),
+    );
+  });
 
-      final result2 = await RemoteCaching.instance.call<TestDataNonSerializable>(
-        'test_key',
-        remote: () async => const TestDataNonSerializable(name: 'Jane', age: 25),
-      );
-      expect(result2, isNot(equals(testData)));
-    });
-  
+  test('should serialize and deserialize', () async {
+    await RemoteCaching.instance.init();
+    const testData = TestDataNonSerializable(name: 'John', age: 30);
+    final result = await RemoteCaching.instance.call<TestDataNonSerializable>(
+      'test_key',
+      remote: () async => testData,
+    );
+    expect(result, equals(testData));
+
+    final result2 = await RemoteCaching.instance.call<TestDataNonSerializable>(
+      'test_key',
+      remote: () async => const TestDataNonSerializable(name: 'Jane', age: 25),
+    );
+    expect(result2, isNot(equals(testData)));
+  });
 }

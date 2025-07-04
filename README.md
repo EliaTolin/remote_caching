@@ -10,7 +10,9 @@
 </p>
 
 <p align="center">
-  
+  <a href="https://pub.dev/packages/remote_caching">
+    <img src="https://img.shields.io/pub/points/remote_caching" alt="Pub Points" />
+  </a>
   <a href="https://pub.dev/packages/remote_caching">
     <img src="https://img.shields.io/pub/v/remote_caching.svg" alt="Pub Version" />
   </a>

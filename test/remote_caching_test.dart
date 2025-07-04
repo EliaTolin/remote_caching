@@ -76,6 +76,28 @@ void main() {
       expect(result, equals(newData));
     });
 
+    test('should respect cache expiration', () async {
+      await RemoteCaching.instance.init();
+      final testData = {'name': 'John'};
+      // First call
+      await RemoteCaching.instance.call<Map<String, dynamic>>(
+        'test_key',
+        remote: () async => testData,
+        cacheExpiring: DateTime.now().add(const Duration(milliseconds: 100)),
+        fromJson: (json) => Map<String, dynamic>.from(json! as Map),
+      );
+      // Wait for cache to expire
+      await Future.delayed(const Duration(milliseconds: 400));
+      // This should call remote function again
+      final newData = {'name': 'Jane'};
+      final result = await RemoteCaching.instance.call<Map<String, dynamic>>(
+        'test_key',
+        remote: () async => newData,
+        fromJson: (json) => Map<String, dynamic>.from(json! as Map),
+      );
+      expect(result, equals(newData));
+    });
+
     test('should force refresh when requested', () async {
       await RemoteCaching.instance.init();
       final testData1 = {'name': 'John'};

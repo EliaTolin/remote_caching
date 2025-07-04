@@ -76,6 +76,9 @@ class _AgePredictionPageState extends State<AgePredictionPage> {
       final data = await RemoteCaching.instance.call(
         'age_prediction_$name',
         cacheDuration: const Duration(seconds: 10),
+        cacheExpiring: DateTime.now().add(
+          const Duration(seconds: 10),
+        ), // If both are provided, cacheExpiring takes precedence
         remote: () async {
           final response = await http.get(
             Uri.parse('https://api.agify.io?name=$name'),
@@ -112,9 +115,9 @@ class _AgePredictionPageState extends State<AgePredictionPage> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to clear cache: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to clear cache: $e')));
       }
     }
   }
@@ -241,8 +244,9 @@ class _AgePredictionPageState extends State<AgePredictionPage> {
                             children: [
                               Text(
                                 'Predicted Age: ${_ageData!['age']}',
-                                style:
-                                    Theme.of(context).textTheme.headlineMedium,
+                                style: Theme.of(
+                                  context,
+                                ).textTheme.headlineMedium,
                               ),
                               Text(
                                 'Based on ${_ageData!['count']} occurrences',
@@ -273,10 +277,7 @@ class _AgePredictionPageState extends State<AgePredictionPage> {
             const Text(
               'Powered by Agify.io API',
               textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 12,
-                color: Colors.grey,
-              ),
+              style: TextStyle(fontSize: 12, color: Colors.grey),
             ),
           ],
         ),

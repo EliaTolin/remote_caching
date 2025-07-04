@@ -87,6 +87,7 @@ class _AgePredictionPageState extends State<AgePredictionPage> {
             throw Exception('Failed to load age prediction');
           }
         },
+        fromJson: (json) => Map<String, dynamic>.from(json! as Map),
       );
 
       setState(() {

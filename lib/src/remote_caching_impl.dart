@@ -20,6 +20,7 @@ export 'remote_caching_impl.dart' show RemoteCaching;
 ///   "user_profile",
 ///   cacheDuration: Duration(minutes: 30),
 ///   remote: () async => await fetchUserProfile(),
+///   fromJson: (json) => UserProfile.fromJson(json as Map<String, dynamic>),
 /// );
 /// ```
 class RemoteCaching {
@@ -74,19 +75,12 @@ class RemoteCaching {
   Future<T> call<T>(
     String key, {
     required Future<T> Function() remote,
+    required T Function(Object? json) fromJson,
     Duration? cacheDuration,
     bool forceRefresh = false,
-    T Function(Object? json)?
-    fromJson, // Optional custom deserializer only for non-List objects
   }) async {
     if (!_isInitialized) {
       throw StateError('RemoteCaching must be initialized before use.');
-    }
-
-    if (T.toString().startsWith('List<') && fromJson == null) {
-      throw ArgumentError(
-        'Caching a List<T> requires a fromJson function to deserialize the list.',
-      );
     }
 
     final duration = cacheDuration ?? _defaultCacheDuration;
@@ -108,7 +102,7 @@ class RemoteCaching {
   /// Get cached data if valid
   Future<T?> _getCachedData<T>(
     String key, {
-    T Function(Object? json)? fromJson,
+    required T Function(Object? json) fromJson,
   }) async {
     final now = DateTime.now().millisecondsSinceEpoch;
     final result = await _database?.query(
@@ -124,18 +118,15 @@ class RemoteCaching {
         final dataString = result.first['data']! as String;
         try {
           final decoded = jsonDecode(dataString);
-          if (fromJson != null) {
-            try {
-              return fromJson(decoded);
-            } catch (e, st) {
-              _logError(
-                'Deserialization error (fromJson) for key $key: $e',
-                stackTrace: st,
-              );
-              return null;
-            }
+          try {
+            return fromJson(decoded);
+          } catch (e, st) {
+            _logError(
+              'Deserialization error (fromJson) for key $key: $e',
+              stackTrace: st,
+            );
+            return null;
           }
-          return decoded as T;
         } catch (e, st) {
           _logError(
             'Deserialization error (jsonDecode) for key $key: $e',

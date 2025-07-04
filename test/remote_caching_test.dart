@@ -39,15 +39,17 @@ void main() {
       await RemoteCaching.instance.init();
       final testData = {'name': 'John', 'age': 30};
       // First call should execute remote function
-      final result1 = await RemoteCaching.instance.call<dynamic>(
+      final result1 = await RemoteCaching.instance.call<Map<String, dynamic>>(
         'test_key',
         remote: () async => testData,
+        fromJson: (json) => Map<String, dynamic>.from(json! as Map),
       );
       expect(result1, equals(testData));
       // Second call should return cached data
-      final result2 = await RemoteCaching.instance.call<dynamic>(
+      final result2 = await RemoteCaching.instance.call<Map<String, dynamic>>(
         'test_key',
         remote: () async => {'different': 'data'}, // This should not be called
+        fromJson: (json) => Map<String, dynamic>.from(json! as Map),
       );
       expect(Map<String, dynamic>.from(result2), equals(testData));
     });
@@ -56,18 +58,20 @@ void main() {
       await RemoteCaching.instance.init();
       final testData = {'name': 'John'};
       // First call
-      await RemoteCaching.instance.call<dynamic>(
+      await RemoteCaching.instance.call<Map<String, dynamic>>(
         'test_key',
         remote: () async => testData,
         cacheDuration: const Duration(milliseconds: 100),
+        fromJson: (json) => Map<String, dynamic>.from(json! as Map),
       );
       // Wait for cache to expire
       await Future.delayed(const Duration(milliseconds: 400));
       // This should call remote function again
       final newData = {'name': 'Jane'};
-      final result = await RemoteCaching.instance.call<dynamic>(
+      final result = await RemoteCaching.instance.call<Map<String, dynamic>>(
         'test_key',
         remote: () async => newData,
+        fromJson: (json) => Map<String, dynamic>.from(json! as Map),
       );
       expect(result, equals(newData));
     });
@@ -77,15 +81,17 @@ void main() {
       final testData1 = {'name': 'John'};
       final testData2 = {'name': 'Jane'};
       // First call
-      await RemoteCaching.instance.call<dynamic>(
+      await RemoteCaching.instance.call<Map<String, dynamic>>(
         'test_key',
         remote: () async => testData1,
+        fromJson: (json) => Map<String, dynamic>.from(json! as Map),
       );
       // Force refresh
-      final result = await RemoteCaching.instance.call<dynamic>(
+      final result = await RemoteCaching.instance.call<Map<String, dynamic>>(
         'test_key',
         remote: () async => testData2,
         forceRefresh: true,
+        fromJson: (json) => Map<String, dynamic>.from(json! as Map),
       );
       expect(result, equals(testData2));
     });
@@ -94,17 +100,19 @@ void main() {
       await RemoteCaching.instance.init();
       final testData = {'name': 'John'};
       // Call with custom duration
-      await RemoteCaching.instance.call<dynamic>(
+      await RemoteCaching.instance.call<Map<String, dynamic>>(
         'test_key',
         cacheDuration: const Duration(milliseconds: 200),
         remote: () async => testData,
+        fromJson: (json) => Map<String, dynamic>.from(json! as Map),
       );
       // Wait less than custom duration
       await Future.delayed(const Duration(milliseconds: 100));
       // Should still return cached data
-      final result = await RemoteCaching.instance.call<dynamic>(
+      final result = await RemoteCaching.instance.call<Map<String, dynamic>>(
         'test_key',
         remote: () async => {'different': 'data'},
+        fromJson: (json) => Map<String, dynamic>.from(json! as Map),
       );
       expect(Map<String, dynamic>.from(result), equals(testData));
     });
@@ -114,27 +122,31 @@ void main() {
       final testData1 = {'name': 'John'};
       final testData2 = {'name': 'Jane'};
       // Cache two different keys
-      await RemoteCaching.instance.call<dynamic>(
+      await RemoteCaching.instance.call<Map<String, dynamic>>(
         'key1',
         remote: () async => testData1,
+        fromJson: (json) => Map<String, dynamic>.from(json! as Map),
       );
-      await RemoteCaching.instance.call<dynamic>(
+      await RemoteCaching.instance.call<Map<String, dynamic>>(
         'key2',
         remote: () async => testData2,
+        fromJson: (json) => Map<String, dynamic>.from(json! as Map),
       );
       // Clear only key1
       await RemoteCaching.instance.clearCacheForKey('key1');
       // key1 should call remote function again
       final newData1 = {'name': 'New John'};
-      final result1 = await RemoteCaching.instance.call<dynamic>(
+      final result1 = await RemoteCaching.instance.call<Map<String, dynamic>>(
         'key1',
         remote: () async => newData1,
+        fromJson: (json) => Map<String, dynamic>.from(json! as Map),
       );
       expect(result1, equals(newData1));
       // key2 should still return cached data
-      final result2 = await RemoteCaching.instance.call<dynamic>(
+      final result2 = await RemoteCaching.instance.call<Map<String, dynamic>>(
         'key2',
         remote: () async => {'different': 'data'},
+        fromJson: (json) => Map<String, dynamic>.from(json! as Map),
       );
       expect(Map<String, dynamic>.from(result2), equals(testData2));
     });
@@ -144,26 +156,30 @@ void main() {
       final testData1 = {'name': 'John'};
       final testData2 = {'name': 'Jane'};
       // Cache two different keys
-      await RemoteCaching.instance.call<dynamic>(
+      await RemoteCaching.instance.call<Map<String, dynamic>>(
         'key1',
         remote: () async => testData1,
+        fromJson: (json) => Map<String, dynamic>.from(json! as Map),
       );
-      await RemoteCaching.instance.call<dynamic>(
+      await RemoteCaching.instance.call<Map<String, dynamic>>(
         'key2',
         remote: () async => testData2,
+        fromJson: (json) => Map<String, dynamic>.from(json! as Map),
       );
       // Clear all cache
       await RemoteCaching.instance.clearCache();
       // Both keys should call remote function again
       final newData1 = {'name': 'New John'};
       final newData2 = {'name': 'New Jane'};
-      final result1 = await RemoteCaching.instance.call<dynamic>(
+      final result1 = await RemoteCaching.instance.call<Map<String, dynamic>>(
         'key1',
         remote: () async => newData1,
+        fromJson: (json) => Map<String, dynamic>.from(json! as Map),
       );
-      final result2 = await RemoteCaching.instance.call<dynamic>(
+      final result2 = await RemoteCaching.instance.call<Map<String, dynamic>>(
         'key2',
         remote: () async => newData2,
+        fromJson: (json) => Map<String, dynamic>.from(json! as Map),
       );
       expect(result1, equals(newData1));
       expect(result2, equals(newData2));
@@ -172,27 +188,31 @@ void main() {
     test('should handle different data types', () async {
       await RemoteCaching.instance.init();
       // Test with String
-      final stringResult = await RemoteCaching.instance.call<dynamic>(
+      final stringResult = await RemoteCaching.instance.call<String>(
         'string_key',
         remote: () async => 'test string',
+        fromJson: (json) => json! as String,
       );
       expect(stringResult, equals('test string'));
       // Test with int
-      final intResult = await RemoteCaching.instance.call<dynamic>(
+      final intResult = await RemoteCaching.instance.call<int>(
         'int_key',
         remote: () async => 42,
+        fromJson: (json) => json! as int,
       );
       expect(intResult, equals(42));
       // Test with List
-      final listResult = await RemoteCaching.instance.call<dynamic>(
+      final listResult = await RemoteCaching.instance.call<List<dynamic>>(
         'list_key',
         remote: () async => [1, 2, 3],
+        fromJson: (json) => List<dynamic>.from(json! as List),
       );
       expect(List<dynamic>.from(listResult), equals([1, 2, 3]));
       // Test with Map
-      final mapResult = await RemoteCaching.instance.call<dynamic>(
+      final mapResult = await RemoteCaching.instance.call<Map<String, dynamic>>(
         'map_key',
         remote: () async => {'key': 'value'},
+        fromJson: (json) => Map<String, dynamic>.from(json! as Map),
       );
       expect(Map<String, dynamic>.from(mapResult), equals({'key': 'value'}));
     });
@@ -200,9 +220,10 @@ void main() {
     test('should throw error if not initialized', () async {
       await RemoteCaching.instance.dispose();
       expect(
-        () => RemoteCaching.instance.call<dynamic>(
+        () => RemoteCaching.instance.call<String>(
           'test_key',
           remote: () async => 'data',
+          fromJson: (json) => json! as String,
         ),
         throwsA(isA<StateError>()),
       );
@@ -211,13 +232,15 @@ void main() {
     test('should get cache statistics', () async {
       await RemoteCaching.instance.init();
       // Add some data to cache
-      await RemoteCaching.instance.call<dynamic>(
+      await RemoteCaching.instance.call<Map<String, dynamic>>(
         'key1',
         remote: () async => {'data': 'value1'},
+        fromJson: (json) => Map<String, dynamic>.from(json! as Map),
       );
-      await RemoteCaching.instance.call<dynamic>(
+      await RemoteCaching.instance.call<Map<String, dynamic>>(
         'key2',
         remote: () async => {'data': 'value2'},
+        fromJson: (json) => Map<String, dynamic>.from(json! as Map),
       );
       final stats = await RemoteCaching.instance.getCacheStats();
       expect(stats.totalEntries, equals(2));
@@ -229,40 +252,19 @@ void main() {
       await RemoteCaching.instance.init();
 
       final testData = {'name': 'John'};
-      await RemoteCaching.instance.call<dynamic>(
+      await RemoteCaching.instance.call<Map<String, dynamic>>(
         'test_key',
         remote: () async => testData,
         cacheDuration: const Duration(milliseconds: 100),
+        fromJson: (json) => Map<String, dynamic>.from(json! as Map),
       );
 
       await Future.delayed(const Duration(milliseconds: 300));
 
-      final result = await RemoteCaching.instance.call<dynamic>(
+      final result = await RemoteCaching.instance.call<Map<String, dynamic>>(
         'test_key',
         remote: () async => {'name': 'Jane'},
-      );
-
-      expect(result, equals({'name': 'Jane'}));
-
-      final stats = await RemoteCaching.instance.getCacheStats();
-      expect(stats.expiredEntries, equals(0));
-    });
-
-    test('should remove expired data automatically on access', () async {
-      await RemoteCaching.instance.init();
-
-      final testData = {'name': 'John'};
-      await RemoteCaching.instance.call<dynamic>(
-        'test_key',
-        remote: () async => testData,
-        cacheDuration: const Duration(milliseconds: 100),
-      );
-
-      await Future.delayed(const Duration(milliseconds: 300));
-
-      final result = await RemoteCaching.instance.call<dynamic>(
-        'test_key',
-        remote: () async => {'name': 'Jane'},
+        fromJson: (json) => Map<String, dynamic>.from(json! as Map),
       );
 
       expect(result, equals({'name': 'Jane'}));
@@ -277,6 +279,7 @@ void main() {
       final result1 = await RemoteCaching.instance.call<String>(
         'primitive_key',
         remote: () async => 'hello world',
+        fromJson: (json) => json! as String,
       );
 
       expect(result1, equals('hello world'));
@@ -284,6 +287,7 @@ void main() {
       final result2 = await RemoteCaching.instance.call<int>(
         'int_key',
         remote: () async => 123,
+        fromJson: (json) => json! as int,
       );
 
       expect(result2, equals(123));
@@ -317,13 +321,15 @@ void main() {
       await RemoteCaching.instance.call<Map<String, dynamic>>(
         'nested_key',
         remote: () async => complexData,
+        fromJson: (json) => Map<String, dynamic>.from(json! as Map),
       );
 
-      final result = await RemoteCaching.instance.call<dynamic>(
+      final result = await RemoteCaching.instance.call<Map<String, dynamic>>(
         'nested_key',
         remote: () async => {
           'user': {'name': 'Other'},
         }, // fallback, shouldn't be used
+        fromJson: (json) => Map<String, dynamic>.from(json! as Map),
       );
 
       expect(Map<String, dynamic>.from(result), equals(complexData));
@@ -332,20 +338,23 @@ void main() {
     test('should overwrite cached data on second call', () async {
       await RemoteCaching.instance.init();
 
-      await RemoteCaching.instance.call<dynamic>(
+      await RemoteCaching.instance.call<Map<String, dynamic>>(
         'overwrite_key',
         remote: () async => {'value': 1},
+        fromJson: (json) => Map<String, dynamic>.from(json! as Map),
       );
 
-      await RemoteCaching.instance.call<dynamic>(
+      await RemoteCaching.instance.call<Map<String, dynamic>>(
         'overwrite_key',
         remote: () async => {'value': 2},
         forceRefresh: true,
+        fromJson: (json) => Map<String, dynamic>.from(json! as Map),
       );
 
-      final result = await RemoteCaching.instance.call<dynamic>(
+      final result = await RemoteCaching.instance.call<Map<String, dynamic>>(
         'overwrite_key',
         remote: () async => {'value': 3},
+        fromJson: (json) => Map<String, dynamic>.from(json! as Map),
       );
 
       expect(Map<String, dynamic>.from(result), equals({'value': 2}));
@@ -354,11 +363,19 @@ void main() {
     group('TestData Tests', () {
       test('should serialize and deserialize', () async {
         const testData = TestData(name: 'John', age: 30);
+        const testData2 = TestData(name: 'Jane', age: 25);
         final result = await RemoteCaching.instance.call<TestData>(
           'test_key',
           remote: () async => testData,
+          fromJson: (json) => TestData.fromJson(json! as Map<String, dynamic>),
+        );
+        final result2 = await RemoteCaching.instance.call<TestData>(
+          'test_key',
+          remote: () async => testData2,
+          fromJson: (json) => TestData.fromJson(json! as Map<String, dynamic>),
         );
         expect(result, equals(testData));
+        expect(result2, equals(testData));
       });
 
       test('TestData should use custom cache duration', () async {
@@ -413,13 +430,15 @@ void main() {
 
     test('clear all and get stats', () async {
       await RemoteCaching.instance.init();
-      await RemoteCaching.instance.call<dynamic>(
+      await RemoteCaching.instance.call<String>(
         'test_key1',
         remote: () async => 'test',
+        fromJson: (json) => json! as String,
       );
-      await RemoteCaching.instance.call<dynamic>(
+      await RemoteCaching.instance.call<String>(
         'test_key2',
         remote: () async => 'test',
+        fromJson: (json) => json! as String,
       );
       await RemoteCaching.instance.clearCache();
       final stats = await RemoteCaching.instance.getCacheStats();
@@ -482,49 +501,5 @@ void main() {
     );
 
     expect(result2, equals(list));
-  });
-
-  test('should throw error if not initialized', () async {
-    await RemoteCaching.instance.dispose();
-    expect(
-      () => RemoteCaching.instance.call<TestDataNonSerializable>(
-        'test_key',
-        remote: () async =>
-            const TestDataNonSerializable(name: 'John', age: 30),
-      ),
-      throwsA(isA<StateError>()),
-    );
-  });
-
-  test('should serialize and deserialize', () async {
-    await RemoteCaching.instance.init();
-    const testData = TestDataNonSerializable(name: 'John', age: 30);
-    final result = await RemoteCaching.instance.call<TestDataNonSerializable>(
-      'test_key',
-      remote: () async => testData,
-    );
-    expect(result, equals(testData));
-
-    final result2 = await RemoteCaching.instance.call<TestDataNonSerializable>(
-      'test_key',
-      remote: () async => const TestDataNonSerializable(name: 'Jane', age: 25),
-    );
-    expect(result2, isNot(equals(testData)));
-  });
-
-  test('should throw error if fromJson is not provided for List', () async {
-    await RemoteCaching.instance.init();
-     final list = [
-      const TestData(name: 'John', age: 30),
-      const TestData(name: 'Jane', age: 25),
-    ];
-
-    expect(
-      () => RemoteCaching.instance.call<List<TestData>>(
-        'test_key',
-        remote: () async => list,
-      ),
-      throwsA(isA<ArgumentError>()),
-    );
   });
 }

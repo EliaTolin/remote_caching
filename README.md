@@ -51,7 +51,7 @@ A lightweight yet powerful Flutter package for caching asynchronous remote calls
 
 - 🔍 You need **structured, persistent caching** for remote API calls
 - 💡 You want **control** over serialization and expiration
-- 🧼 You don’t want to reinvent the wheel each time you need simple cache logic
+- 🧼 You don't want to reinvent the wheel each time you need simple cache logic
 
 ## 🚀 Getting Started
 
@@ -87,7 +87,7 @@ final user = await RemoteCaching.instance.call<UserProfile>(
   'user_profile',
   cacheDuration: Duration(minutes: 30), // Optional
   remote: () async => await fetchUserProfile(),
-  fromJson: (json) => UserProfile.fromJson(json as Map<String, dynamic>), // Optional if the object have a fromJson method or is not a List
+  fromJson: (json) => UserProfile.fromJson(json as Map<String, dynamic>),
 );
 ```
 
@@ -98,7 +98,7 @@ final pizza = await RemoteCaching.instance.call<Pizza>(
   'pizza_${pizzaName}',
   cacheDuration: Duration(minutes: 30), // Optional
   remote: () async => await fetchPizza(pizzaName),
-  fromJson: (json) => Pizza.fromJson(json as Map<String, dynamic>), // Optional if the object have a fromJson method or is not a List
+  fromJson: (json) => Pizza.fromJson(json as Map<String, dynamic>),
 );
 ```
 
@@ -108,7 +108,7 @@ If you want to cache a list of objects, you need to provide a `fromJson` functio
 final pizzas = await RemoteCaching.instance.call<List<Pizza>>(
   'pizzas',
   remote: () async => await fetchPizzas(),
-  fromJson: (json) => (json! as List)
+  fromJson: (json) => (json as List)
       .map((item) => Pizza.fromJson(item as Map<String, dynamic>))
       .toList(),
 );
@@ -124,7 +124,8 @@ final pizzas = await RemoteCaching.instance.call<List<Pizza>>(
 await RemoteCaching.instance.call(
   'user_profile',
   forceRefresh: true,
-  remote: () async => await fetchUserProfile()
+  remote: () async => await fetchUserProfile(),
+  fromJson: (json) => UserProfile.fromJson(json as Map<String, dynamic>),
 );
 ```
 
@@ -143,13 +144,6 @@ print(stats); // CachingStats(totalEntries: 3, totalSizeBytes: 1234, expiredEntr
 ```
 
 ---
-⚠️ Serialization Note (for Lists)
-
-If you want to cache a list of objects, you need to provide a `fromJson` function.
-
-```dart
-
-
 
 ## 📦 Example
 

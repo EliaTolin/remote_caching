@@ -102,6 +102,18 @@ final pizza = await RemoteCaching.instance.call<Pizza>(
 );
 ```
 
+If you want to cache a list of objects, you need to provide a `fromJson` function.
+
+```dart
+final pizzas = await RemoteCaching.instance.call<List<Pizza>>(
+  'pizzas',
+  remote: () async => await fetchPizzas(),
+  fromJson: (json) => (json! as List)
+      .map((item) => Pizza.fromJson(item as Map<String, dynamic>))
+      .toList(),
+);
+```
+
 - The first call fetches from remote and caches the result.
 - Subsequent calls within 30 minutes return the cached value.
 - After expiration, the remote is called again and cache is updated.

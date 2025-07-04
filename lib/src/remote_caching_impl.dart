@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
 
+import 'package:flutter/foundation.dart';
 import 'package:path/path.dart';
 import 'package:remote_caching/src/models/caching_stats.dart';
 import 'package:sqflite/sqflite.dart';
@@ -33,10 +34,22 @@ class RemoteCaching {
   bool _isInitialized = false;
   bool _verboseMode = false;
 
+  void _logInfo(String message) {
+    if (_verboseMode) {
+      log(message);
+    }
+  }
+
+  void _logError(String message, {StackTrace? stackTrace}) {
+    if (_verboseMode) {
+      log(message, stackTrace: stackTrace);
+    }
+  }
+
   /// Initialize the caching system
   Future<void> init({
     Duration? defaultCacheDuration,
-    bool verboseMode = false,
+    bool verboseMode = kDebugMode,
   }) async {
     if (_isInitialized) return;
 
@@ -64,21 +77,15 @@ class RemoteCaching {
     if (!forceRefresh) {
       final cached = await _getCachedData<T>(key, fromJson: fromJson);
       if (cached != null) {
-        if (_verboseMode) {
-          log('Cached data found for key: $key');
-        }
+        _logInfo('Cached data found for key: $key');
         return cached;
       }
     }
 
     final data = await remote();
-    if (_verboseMode) {
-      log('Data fetched from remote for key: $key');
-    }
+    _logInfo('Data fetched from remote for key: $key');
     await _cacheData(key, data, duration);
-    if (_verboseMode) {
-      log('Data cached for key: $key');
-    }
+    _logInfo('Data cached for key: $key');
     return data;
   }
 
@@ -97,9 +104,7 @@ class RemoteCaching {
     if (result != null && result.isNotEmpty) {
       final expiresAt = result.first['expires_at']! as int;
       if (expiresAt > now) {
-        if (_verboseMode) {
-          log('Cached data found for key: $key');
-        }
+        _logInfo('Cached data found for key: $key');
         final dataString = result.first['data']! as String;
         try {
           final decoded = jsonDecode(dataString);
@@ -107,7 +112,7 @@ class RemoteCaching {
             try {
               return fromJson(decoded);
             } catch (e, st) {
-              log(
+              _logError(
                 'Deserialization error (fromJson) for key $key: $e',
                 stackTrace: st,
               );
@@ -116,23 +121,19 @@ class RemoteCaching {
           }
           return decoded as T;
         } catch (e, st) {
-          log(
+          _logError(
             'Deserialization error (jsonDecode) for key $key: $e',
             stackTrace: st,
           );
           return null;
         }
       } else {
-        if (_verboseMode) {
-          log('Cached data expired for key: $key');
-        }
+        _logInfo('Cached data expired for key: $key');
         // Remove the expired data
         await _database?.delete('cache', where: 'key = ?', whereArgs: [key]);
       }
     }
-    if (_verboseMode) {
-      log('No cached data found for key: $key');
-    }
+    _logInfo('No cached data found for key: $key');
     return null;
   }
 
@@ -144,7 +145,10 @@ class RemoteCaching {
     try {
       dataString = jsonEncode(data);
     } catch (e, st) {
-      log('Serialization error (jsonEncode) for key $key: $e', stackTrace: st);
+      _logError(
+        'Serialization error (jsonEncode) for key $key: $e',
+        stackTrace: st,
+      );
       return; // Non salvo nulla in cache
     }
 

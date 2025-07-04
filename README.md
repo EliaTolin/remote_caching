@@ -87,7 +87,7 @@ final user = await RemoteCaching.instance.call<UserProfile>(
   'user_profile',
   cacheDuration: Duration(minutes: 30), // Optional
   remote: () async => await fetchUserProfile(),
-  fromJson: (json) => UserProfile.fromJson(json as Map<String, dynamic>), // Optional
+  fromJson: (json) => UserProfile.fromJson(json as Map<String, dynamic>), // Optional if the object have a fromJson method
 );
 ```
 
@@ -98,7 +98,7 @@ final pizza = await RemoteCaching.instance.call<Pizza>(
   'pizza_${pizzaName}',
   cacheDuration: Duration(minutes: 30), // Optional
   remote: () async => await fetchPizza(pizzaName),
-  fromJson: (json) => Pizza.fromJson(json as Map<String, dynamic>), // Optional
+  fromJson: (json) => Pizza.fromJson(json as Map<String, dynamic>), // Optional if the object have a fromJson method
 );
 ```
 
@@ -159,7 +159,7 @@ A full example is available in the [`example/`](example/) directory. It demonstr
 A: The error is logged, the cache is ignored, and the remote call is used. Your app will never crash due to cache errors.
 
 **Q: Can I use my own model classes?**  
-A: Yes! Just provide a `fromJson` function and ensure your model supports `toJson`.
+A: Yes! Just provide a fromJson function and ensure your model supports toJson when caching. The package relies on jsonEncode / jsonDecode under the hood.
 
 **Q: Does it work offline?**  
 A: Cached data is available offline until it expires or is cleared.

@@ -36,13 +36,22 @@ class RemoteCaching {
 
   void _logInfo(String message) {
     if (_verboseMode) {
-      log(message);
+      log(
+        '🔵 [RemoteCaching] $message',
+        name: 'RemoteCaching',
+        level: 800, // INFO level
+      );
     }
   }
 
   void _logError(String message, {StackTrace? stackTrace}) {
     if (_verboseMode) {
-      log(message, stackTrace: stackTrace);
+      log(
+        '🔴 [RemoteCaching ERROR] $message',
+        name: 'RemoteCaching',
+        level: 1000, // SEVERE level
+        stackTrace: stackTrace,
+      );
     }
   }
 

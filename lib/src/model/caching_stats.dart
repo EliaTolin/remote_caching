@@ -1,5 +1,4 @@
 class CachingStats {
-
   CachingStats({
     required this.totalEntries,
     required this.totalSizeBytes,

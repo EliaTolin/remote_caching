@@ -1,8 +1,8 @@
 {
-    "dart.lineLength": 100,
+    "dart.lineLength": 80,
     "[dart]": {
       "editor.rulers": [
-        100
+        80
       ],
       "editor.tabSize": 2,
       "editor.insertSpaces": true,

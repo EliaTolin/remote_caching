@@ -198,7 +198,9 @@ class RemoteCaching {
 
   /// Get cache statistics
   Future<CachingStats> getCacheStats() async {
-    if (!_isInitialized) throw StateError('RemoteCaching must be initialized before use.');
+    if (!_isInitialized) {
+      throw StateError('RemoteCaching must be initialized before use.');
+    }
 
     final stats = await _database?.rawQuery(
       'SELECT COUNT(*) as total_entries, SUM(LENGTH(data)) as total_size FROM cache',

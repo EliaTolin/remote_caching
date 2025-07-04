@@ -123,7 +123,10 @@ void main() {
       final testData1 = {'name': 'John'};
       final testData2 = {'name': 'Jane'};
       // First call
-      await RemoteCaching.instance.call<dynamic>('test_key', remote: () async => testData1);
+      await RemoteCaching.instance.call<dynamic>(
+        'test_key',
+        remote: () async => testData1,
+      );
       // Force refresh
       final result = await RemoteCaching.instance.call<dynamic>(
         'test_key',
@@ -157,8 +160,14 @@ void main() {
       final testData1 = {'name': 'John'};
       final testData2 = {'name': 'Jane'};
       // Cache two different keys
-      await RemoteCaching.instance.call<dynamic>('key1', remote: () async => testData1);
-      await RemoteCaching.instance.call<dynamic>('key2', remote: () async => testData2);
+      await RemoteCaching.instance.call<dynamic>(
+        'key1',
+        remote: () async => testData1,
+      );
+      await RemoteCaching.instance.call<dynamic>(
+        'key2',
+        remote: () async => testData2,
+      );
       // Clear only key1
       await RemoteCaching.instance.clearCacheForKey('key1');
       // key1 should call remote function again
@@ -181,8 +190,14 @@ void main() {
       final testData1 = {'name': 'John'};
       final testData2 = {'name': 'Jane'};
       // Cache two different keys
-      await RemoteCaching.instance.call<dynamic>('key1', remote: () async => testData1);
-      await RemoteCaching.instance.call<dynamic>('key2', remote: () async => testData2);
+      await RemoteCaching.instance.call<dynamic>(
+        'key1',
+        remote: () async => testData1,
+      );
+      await RemoteCaching.instance.call<dynamic>(
+        'key2',
+        remote: () async => testData2,
+      );
       // Clear all cache
       await RemoteCaching.instance.clearCache();
       // Both keys should call remote function again
@@ -231,7 +246,10 @@ void main() {
     test('should throw error if not initialized', () async {
       await RemoteCaching.instance.dispose();
       expect(
-        () => RemoteCaching.instance.call<dynamic>('test_key', remote: () async => 'data'),
+        () => RemoteCaching.instance.call<dynamic>(
+          'test_key',
+          remote: () async => 'data',
+        ),
         throwsA(isA<StateError>()),
       );
     });
@@ -239,8 +257,14 @@ void main() {
     test('should get cache statistics', () async {
       await RemoteCaching.instance.init();
       // Add some data to cache
-      await RemoteCaching.instance.call<dynamic>('key1', remote: () async => {'data': 'value1'});
-      await RemoteCaching.instance.call<dynamic>('key2', remote: () async => {'data': 'value2'});
+      await RemoteCaching.instance.call<dynamic>(
+        'key1',
+        remote: () async => {'data': 'value1'},
+      );
+      await RemoteCaching.instance.call<dynamic>(
+        'key2',
+        remote: () async => {'data': 'value2'},
+      );
       final stats = await RemoteCaching.instance.getCacheStats();
       expect(stats.totalEntries, equals(2));
       expect(stats.totalSizeBytes, greaterThan(0));
@@ -311,7 +335,10 @@ void main() {
 
       expect(result1, equals('hello world'));
 
-      final result2 = await RemoteCaching.instance.call<int>('int_key', remote: () async => 123);
+      final result2 = await RemoteCaching.instance.call<int>(
+        'int_key',
+        remote: () async => 123,
+      );
 
       expect(result2, equals(123));
     });
@@ -359,7 +386,10 @@ void main() {
     test('should overwrite cached data on second call', () async {
       await RemoteCaching.instance.init();
 
-      await RemoteCaching.instance.call<dynamic>('overwrite_key', remote: () async => {'value': 1});
+      await RemoteCaching.instance.call<dynamic>(
+        'overwrite_key',
+        remote: () async => {'value': 1},
+      );
 
       await RemoteCaching.instance.call<dynamic>(
         'overwrite_key',
@@ -409,30 +439,33 @@ void main() {
       });
     });
 
-    test('If deserialization fails, cache is ignored and remote is called', () async {
-      var remoteCalls = 0;
-      // First call: saves to cache (serialization will fail later)
-      await RemoteCaching.instance.call<BadSerializable>(
-        'test_deser',
-        remote: () async {
-          remoteCalls++;
-          return BadSerializable('ok');
-        },
-        fromJson: (json) => BadSerializable.fromJson(),
-        cacheDuration: const Duration(minutes: 5),
-      );
-      // Second call: deserialization fails, so remote is called again
-      await RemoteCaching.instance.call<BadSerializable>(
-        'test_deser',
-        remote: () async {
-          remoteCalls++;
-          return BadSerializable('ok2');
-        },
-        fromJson: (json) => BadSerializable.fromJson(),
-        cacheDuration: const Duration(minutes: 5),
-      );
-      expect(remoteCalls, 2);
-    });
+    test(
+      'If deserialization fails, cache is ignored and remote is called',
+      () async {
+        var remoteCalls = 0;
+        // First call: saves to cache (serialization will fail later)
+        await RemoteCaching.instance.call<BadSerializable>(
+          'test_deser',
+          remote: () async {
+            remoteCalls++;
+            return BadSerializable('ok');
+          },
+          fromJson: (json) => BadSerializable.fromJson(),
+          cacheDuration: const Duration(minutes: 5),
+        );
+        // Second call: deserialization fails, so remote is called again
+        await RemoteCaching.instance.call<BadSerializable>(
+          'test_deser',
+          remote: () async {
+            remoteCalls++;
+            return BadSerializable('ok2');
+          },
+          fromJson: (json) => BadSerializable.fromJson(),
+          cacheDuration: const Duration(minutes: 5),
+        );
+        expect(remoteCalls, 2);
+      },
+    );
 
     test(
       'If serialization fails, data is not saved in cache but remote result is still returned',

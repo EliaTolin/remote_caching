@@ -522,7 +522,7 @@ void main() {
       },
     );
 
-    test('should cache a list of objects', () async {
+    test('should cache a list of objects without fromJson', () async {
       await RemoteCaching.instance.init();
       final list = [
         const TestData(name: 'John', age: 30),
@@ -538,6 +538,32 @@ void main() {
       );
       expect(result2, equals(list));
     });
+  });
+
+  test('should cache a list of objects with fromJson', () async {
+    await RemoteCaching.instance.init();
+    final list = [
+      const TestData(name: 'John', age: 30),
+      const TestData(name: 'Jane', age: 25),
+    ];
+
+    await RemoteCaching.instance.call<List<TestData>>(
+      'test_list',
+      remote: () async => list,
+      fromJson: (json) => (json! as List)
+          .map((item) => TestData.fromJson(item as Map<String, dynamic>))
+          .toList(),
+    );
+
+    final result2 = await RemoteCaching.instance.call<List<TestData>>(
+      'test_list',
+      remote: () async => throw Exception('Should not call remote'),
+      fromJson: (json) => (json! as List)
+          .map((item) => TestData.fromJson(item as Map<String, dynamic>))
+          .toList(),
+    );
+
+    expect(result2, equals(list));
   });
 
   test('should throw error if not initialized', () async {

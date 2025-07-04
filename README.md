@@ -17,8 +17,8 @@
     <img src="https://img.shields.io/github/stars/eliatolin/remote_caching?style=social" alt="GitHub Stars" />
   </a>
   <a href="https://github.com/eliatolin/remote_caching/actions"><img src="https://github.com/eliatolin/remote_caching/actions/workflows/test.yml/badge.svg"></a>
-    <a href="https://codecov.io/gh/eliatolin/remote_caching">
-    <img src="https://codecov.io/gh/eliatolin/remote_caching/branch/main/graph/badge.svg" alt="Code Coverage" />
+  <a href="https://codecov.io/github/EliaTolin/remote_caching" >
+    <img src="https://codecov.io/github/EliaTolin/remote_caching/graph/badge.svg?token=P09UXF2DER"/>
   </a>
 </p>
 

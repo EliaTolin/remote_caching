@@ -38,3 +38,4 @@ jobs:
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: lcov.info
+          slug: EliaTolin/remote_caching

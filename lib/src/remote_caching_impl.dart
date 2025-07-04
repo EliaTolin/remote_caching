@@ -212,9 +212,9 @@ class RemoteCaching {
     );
 
     return CachingStats(
-      totalEntries: stats!.first['total_entries']! as int,
-      totalSizeBytes: stats.first['total_size']! as int,
-      expiredEntries: expired!.first['expired_entries']! as int,
+      totalEntries: (stats?.first['total_entries'] as int?) ?? 0,
+      totalSizeBytes: (stats?.first['total_size'] as int?) ?? 0,
+      expiredEntries: (expired?.first['expired_entries'] as int?) ?? 0,
     );
   }
 

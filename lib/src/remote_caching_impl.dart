@@ -67,10 +67,17 @@ class RemoteCaching {
     required Future<T> Function() remote,
     Duration? cacheDuration,
     bool forceRefresh = false,
-    T Function(Object? json)? fromJson, // Optional custom deserializer
+    T Function(Object? json)?
+    fromJson, // Optional custom deserializer only for non-List objects
   }) async {
     if (!_isInitialized) {
       throw StateError('RemoteCaching must be initialized before use.');
+    }
+
+    if (T.toString().startsWith('List<') && fromJson == null) {
+      throw ArgumentError(
+        'Caching a List<T> requires a fromJson function to deserialize the list.',
+      );
     }
 
     final duration = cacheDuration ?? _defaultCacheDuration;

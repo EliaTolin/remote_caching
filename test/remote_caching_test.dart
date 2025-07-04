@@ -1,73 +1,8 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:remote_caching/remote_caching.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
-@immutable
-class TestData {
-  const TestData({required this.name, required this.age});
-
-  factory TestData.fromJson(Map<String, dynamic> json) =>
-      TestData(name: json['name'], age: json['age']);
-  final String name;
-  final int age;
-
-  Map<String, dynamic> toJson() => {'name': name, 'age': age};
-
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is TestData &&
-          runtimeType == other.runtimeType &&
-          name == other.name &&
-          age == other.age;
-
-  @override
-  int get hashCode => name.hashCode ^ age.hashCode;
-}
-
-@immutable
-class TestDataNonSerializable {
-  const TestDataNonSerializable({required this.name, required this.age});
-
-  final String name;
-  final int age;
-
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is TestData &&
-          runtimeType == other.runtimeType &&
-          name == other.name &&
-          age == other.age;
-
-  @override
-  int get hashCode => name.hashCode ^ age.hashCode;
-}
-
-class BadSerializable {
-  BadSerializable(this.value);
-
-  factory BadSerializable.fromJson() {
-    throw Exception('Deserialization failed!');
-  }
-  final String value;
-
-  Map<String, dynamic> toJson() {
-    throw Exception('Serialization failed!');
-  }
-}
-
-class GoodSerializable {
-  GoodSerializable(this.value);
-
-  factory GoodSerializable.fromJson(Map<String, dynamic> json) {
-    return GoodSerializable(json['value'] as String);
-  }
-  final String value;
-
-  Map<String, dynamic> toJson() => {'value': value};
-}
+import 'models/test_models.dart';
 
 void main() {
   group('RemoteCaching Tests', () {
@@ -521,23 +456,6 @@ void main() {
         expect(remoteCalls, 2);
       },
     );
-
-    test('should cache a list of objects without fromJson', () async {
-      await RemoteCaching.instance.init();
-      final list = [
-        const TestData(name: 'John', age: 30),
-        const TestData(name: 'Jane', age: 25),
-      ];
-      await RemoteCaching.instance.call<List<TestData>>(
-        'test_list',
-        remote: () async => list,
-      );
-      final result2 = await RemoteCaching.instance.call<List<TestData>>(
-        'test_list',
-        remote: () async => throw Exception('Should not call remote'),
-      );
-      expect(result2, equals(list));
-    });
   });
 
   test('should cache a list of objects with fromJson', () async {
@@ -592,5 +510,21 @@ void main() {
       remote: () async => const TestDataNonSerializable(name: 'Jane', age: 25),
     );
     expect(result2, isNot(equals(testData)));
+  });
+
+  test('should throw error if fromJson is not provided for List', () async {
+    await RemoteCaching.instance.init();
+     final list = [
+      const TestData(name: 'John', age: 30),
+      const TestData(name: 'Jane', age: 25),
+    ];
+
+    expect(
+      () => RemoteCaching.instance.call<List<TestData>>(
+        'test_key',
+        remote: () async => list,
+      ),
+      throwsA(isA<ArgumentError>()),
+    );
   });
 }

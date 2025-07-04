@@ -87,7 +87,7 @@ final user = await RemoteCaching.instance.call<UserProfile>(
   'user_profile',
   cacheDuration: Duration(minutes: 30), // Optional
   remote: () async => await fetchUserProfile(),
-  fromJson: (json) => UserProfile.fromJson(json as Map<String, dynamic>), // Optional if the object have a fromJson method
+  fromJson: (json) => UserProfile.fromJson(json as Map<String, dynamic>), // Optional if the object have a fromJson method or is not a List
 );
 ```
 
@@ -98,7 +98,7 @@ final pizza = await RemoteCaching.instance.call<Pizza>(
   'pizza_${pizzaName}',
   cacheDuration: Duration(minutes: 30), // Optional
   remote: () async => await fetchPizza(pizzaName),
-  fromJson: (json) => Pizza.fromJson(json as Map<String, dynamic>), // Optional if the object have a fromJson method
+  fromJson: (json) => Pizza.fromJson(json as Map<String, dynamic>), // Optional if the object have a fromJson method or is not a List
 );
 ```
 
@@ -131,6 +131,13 @@ print(stats); // CachingStats(totalEntries: 3, totalSizeBytes: 1234, expiredEntr
 ```
 
 ---
+⚠️ Serialization Note (for Lists)
+
+If you want to cache a list of objects, you need to provide a `fromJson` function.
+
+```dart
+
+
 
 ## 📦 Example
 

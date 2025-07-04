@@ -83,6 +83,17 @@ final user = await RemoteCaching.instance.call<UserProfile>(
 );
 ```
 
+Or if you want to cache a remote call with a dynamic key:
+
+```dart
+final pizza = await RemoteCaching.instance.call<Pizza>(
+  'pizza_${pizzaName}',
+  cacheDuration: Duration(minutes: 30), // Optional
+  remote: () async => await fetchPizza(pizzaName),
+  fromJson: (json) => Pizza.fromJson(json as Map<String, dynamic>), // Optional
+);
+```
+
 - The first call fetches from remote and caches the result.
 - Subsequent calls within 30 minutes return the cached value.
 - After expiration, the remote is called again and cache is updated.
@@ -108,7 +119,7 @@ await RemoteCaching.instance.clearCacheForKey('user_profile'); // By key
 
 ```dart
 final stats = await RemoteCaching.instance.getCacheStats();
-print(stats); // { total_entries: 3, total_size_bytes: 1234, expired_entries: 1 }
+print(stats); // CachingStats(totalEntries: 3, totalSizeBytes: 1234, expiredEntries: 1)
 ```
 
 ---

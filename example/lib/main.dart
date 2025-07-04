@@ -129,9 +129,9 @@ class _AgePredictionPageState extends State<AgePredictionPage> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Total entries: ${stats['total_entries']}'),
-                Text('Total size: ${stats['total_size_bytes']} bytes'),
-                Text('Expired entries: ${stats['expired_entries']}'),
+                Text('Total entries: ${stats.totalEntries}'),
+                Text('Total size: ${stats.totalSizeBytes} bytes'),
+                Text('Expired entries: ${stats.expiredEntries}'),
               ],
             ),
             actions: [

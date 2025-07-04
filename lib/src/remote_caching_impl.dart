@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
+import 'package:remote_caching/src/model/caching_stats.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 
@@ -195,8 +196,8 @@ class RemoteCaching {
   }
 
   /// Get cache statistics
-  Future<Map<String, dynamic>> getCacheStats() async {
-    if (!_isInitialized) return {};
+  Future<CachingStats> getCacheStats() async {
+    if (!_isInitialized) throw StateError('RemoteCaching must be initialized before use.');
 
     final stats = await _database?.rawQuery(
       'SELECT COUNT(*) as total_entries, SUM(LENGTH(data)) as total_size FROM cache',
@@ -207,11 +208,11 @@ class RemoteCaching {
       [DateTime.now().millisecondsSinceEpoch],
     );
 
-    return {
-      'total_entries': stats?.first['total_entries'] ?? 0,
-      'total_size_bytes': stats?.first['total_size'] ?? 0,
-      'expired_entries': expired?.first['expired_entries'] ?? 0,
-    };
+    return CachingStats(
+      totalEntries: stats?.first['total_entries'] as int,
+      totalSizeBytes: stats?.first['total_size'] as int,
+      expiredEntries: expired?.first['expired_entries'] as int,
+    );
   }
 
   /// Dispose of the cache system

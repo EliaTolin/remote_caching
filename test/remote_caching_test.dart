@@ -264,9 +264,9 @@ void main() {
         remote: () async => {'data': 'value2'},
       );
       final stats = await RemoteCaching.instance.getCacheStats();
-      expect(stats['total_entries'], equals(2));
-      expect(stats['total_size_bytes'], greaterThan(0));
-      expect(stats['expired_entries'], equals(0));
+      expect(stats.totalEntries, equals(2));
+      expect(stats.totalSizeBytes, greaterThan(0));
+      expect(stats.expiredEntries, equals(0));
     });
 
     test('should remove expired data automatically on access', () async {
@@ -293,7 +293,7 @@ void main() {
 
       // Controlla che non ci siano dati scaduti
       final stats = await RemoteCaching.instance.getCacheStats();
-      expect(stats['expired_entries'], equals(0));
+      expect(stats.expiredEntries, equals(0));
     });
 
     test('should remove expired data automatically on access', () async {
@@ -320,7 +320,7 @@ void main() {
 
       // Controlla che non ci siano dati scaduti
       final stats = await RemoteCaching.instance.getCacheStats();
-      expect(stats['expired_entries'], equals(0));
+      expect(stats.expiredEntries, equals(0));
     });
 
     test('should deserialize primitive types without fromJson', () async {

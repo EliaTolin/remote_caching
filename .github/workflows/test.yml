@@ -23,10 +23,7 @@ jobs:
       - name: Run tests with coverage
         run: flutter test --coverage
 
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v3
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v5
         with:
-          files: coverage/lcov.info
-          flags: flutter
-          name: remote-caching
-          fail_ci_if_error: true
+          token: ${{ secrets.CODECOV_TOKEN }}

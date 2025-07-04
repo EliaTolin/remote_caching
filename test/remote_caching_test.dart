@@ -26,6 +26,25 @@ class TestData {
   int get hashCode => name.hashCode ^ age.hashCode;
 }
 
+@immutable
+class TestDataNonSerializable {
+  const TestDataNonSerializable({required this.name, required this.age});
+
+  final String name;
+  final int age;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is TestData &&
+          runtimeType == other.runtimeType &&
+          name == other.name &&
+          age == other.age;
+
+  @override
+  int get hashCode => name.hashCode ^ age.hashCode;
+}
+
 class BadSerializable {
   BadSerializable(this.value);
 
@@ -495,5 +514,23 @@ void main() {
         expect(remoteCalls, 2);
       },
     );
+  });
+
+  group('TestDataNonSerializable Tests', () {
+    test('should serialize and deserialize', () async {
+      await RemoteCaching.instance.init();
+      const testData = TestDataNonSerializable(name: 'John', age: 30);
+      final result = await RemoteCaching.instance.call<TestDataNonSerializable>(
+        'test_key',
+        remote: () async => testData,
+      );
+      expect(result, equals(testData));
+
+      final result2 = await RemoteCaching.instance.call<TestDataNonSerializable>(
+        'test_key',
+        remote: () async => const TestDataNonSerializable(name: 'Jane', age: 25),
+      );
+      expect(result2, isNot(equals(testData)));
+    });
   });
 }

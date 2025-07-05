@@ -197,12 +197,6 @@ A: We use [sqlite3](https://pub.dev/packages/sqflite) with [sqflite_common_ffi](
 
 Contributions, issues and feature requests are welcome! Feel free to check [issues page](https://github.com/eliatolin/remote_caching/issues) or submit a pull request.
 
-1. Fork the repo
-2. Create your feature branch (`git checkout -b feature/my-feature`)
-3. Commit your changes (`git commit -am 'Add new feature'`)
-4. Push to the branch (`git push origin feature/my-feature`)
-5. Create a new Pull Request
-
 ---
 
 _Made with ❤️ by [Eliatolin](https://github.com/eliatolin)_

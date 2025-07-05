@@ -3,9 +3,20 @@ name: Test
 on:
   push:
     branches: [main]
+    paths:
+      - 'lib/**'
+      - 'test/**'
+      - 'bin/**'
+      - 'pubspec.yaml'
+      - 'analysis_options.yaml'
   pull_request:
     branches: [main]
-
+    paths:
+      - 'lib/**'
+      - 'test/**'
+      - 'bin/**'
+      - 'pubspec.yaml'
+      - 'analysis_options.yaml'
 jobs:
   analyze:
     name: Analyze

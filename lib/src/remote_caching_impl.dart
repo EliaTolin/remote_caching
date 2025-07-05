@@ -77,13 +77,22 @@ class RemoteCaching {
     required Future<T> Function() remote,
     required T Function(Object? json) fromJson,
     Duration? cacheDuration,
+    DateTime? cacheExpiring,
     bool forceRefresh = false,
   }) async {
     if (!_isInitialized) {
       throw StateError('RemoteCaching must be initialized before use.');
     }
 
-    final duration = cacheDuration ?? _defaultCacheDuration;
+    assert(
+      cacheDuration == null || cacheExpiring == null,
+      'You cannot specify both cacheDuration and cacheExpiring at the same time.',
+    );
+
+    final expiresAt =
+        cacheExpiring ??
+        DateTime.now().add(cacheDuration ?? _defaultCacheDuration);
+
     if (!forceRefresh) {
       final cached = await _getCachedData<T>(key, fromJson: fromJson);
       if (cached != null) {
@@ -94,7 +103,7 @@ class RemoteCaching {
 
     final data = await remote();
     _logInfo('Data fetched from remote for key: $key');
-    await _cacheData(key, data, duration);
+    await _cacheData(key, data, expiresAt);
     _logInfo('Data cached for key: $key');
     return data;
   }
@@ -145,9 +154,8 @@ class RemoteCaching {
   }
 
   /// Cache data with expiration
-  Future<void> _cacheData<T>(String key, T data, Duration duration) async {
+  Future<void> _cacheData<T>(String key, T data, DateTime expiresAt) async {
     final now = DateTime.now();
-    final expiresAt = now.add(duration);
     String? dataString;
     try {
       dataString = jsonEncode(data);

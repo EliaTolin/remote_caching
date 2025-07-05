@@ -75,10 +75,7 @@ class _AgePredictionPageState extends State<AgePredictionPage> {
     try {
       final data = await RemoteCaching.instance.call(
         'age_prediction_$name',
-        cacheDuration: const Duration(seconds: 10),
-        cacheExpiring: DateTime.now().add(
-          const Duration(seconds: 10),
-        ), // If both are provided, cacheExpiring takes precedence
+        cacheExpiring: DateTime.now().add(const Duration(seconds: 10)),
         remote: () async {
           final response = await http.get(
             Uri.parse('https://api.agify.io?name=$name'),

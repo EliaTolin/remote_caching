@@ -84,6 +84,11 @@ class RemoteCaching {
       throw StateError('RemoteCaching must be initialized before use.');
     }
 
+    assert(
+      cacheDuration == null || cacheExpiring == null,
+      'You cannot specify both cacheDuration and cacheExpiring at the same time.',
+    );
+
     final expiresAt =
         cacheExpiring ??
         DateTime.now().add(cacheDuration ?? _defaultCacheDuration);

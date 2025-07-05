@@ -1,3 +1,14 @@
+## 1.0.7
+
+* Update docs
+
+## 1.0.6
+
+* Added cacheExpiring parameter to the call method
+
+## 1.0.5
+
+
 ## 1.0.4
 
 * Added verbose mode

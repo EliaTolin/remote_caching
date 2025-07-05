@@ -2,7 +2,7 @@
   <img src="https://raw.githubusercontent.com/eliatolin/remote_caching/main/assets/logo.png" width="220px" alt="Remote Caching logo" />
 </p>
 
-<h1 align="center">Remote Caching</h1>
+<h1 align="center">🔁 Remote Caching 📦</h1>
 
 <p align="center">
   <strong>A lightweight, flexible, and persistent cache layer for remote API calls in Flutter.</strong><br />

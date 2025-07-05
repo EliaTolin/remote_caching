@@ -91,8 +91,9 @@ final user = await RemoteCaching.instance.call<UserProfile>(
 );
 ```
 
+Or use cacheExpiring for an exact expiration date/time:
+
 ```dart
-// Or use cacheExpiring for an exact expiration date/time:
 final user = await RemoteCaching.instance.call<UserProfile>(
   'user_profile',
   cacheExpiring: DateTime.now().add(Duration(hours: 2)), // Optional
@@ -100,7 +101,6 @@ final user = await RemoteCaching.instance.call<UserProfile>(
   fromJson: (json) => UserProfile.fromJson(json as Map<String, dynamic>),
 );
 ```
-
 
 Or if you want to cache a remote call with a dynamic key:
 

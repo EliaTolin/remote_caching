@@ -17,6 +17,7 @@ on:
       - 'bin/**'
       - 'pubspec.yaml'
       - 'analysis_options.yaml'
+
 jobs:
   analyze:
     name: Analyze
@@ -26,6 +27,14 @@ jobs:
       - uses: flutter-actions/setup-flutter@v2
         with:
           channel: stable
+      - name: Cache pub packages
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.pub-cache
+            .dart_tool
+          key: ${{ runner.os }}-pub-${{ hashFiles('**/pubspec.lock') }}
+          restore-keys: ${{ runner.os }}-pub-
       - name: Install dependencies
         run: flutter pub get
       - name: Run analyzer
@@ -36,14 +45,19 @@ jobs:
     needs: analyze
     steps:
       - uses: actions/checkout@v4
-
       - uses: flutter-actions/setup-flutter@v2
         with:
           channel: stable
-
+      - name: Cache pub packages
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.pub-cache
+            .dart_tool
+          key: ${{ runner.os }}-pub-${{ hashFiles('**/pubspec.lock') }}
+          restore-keys: ${{ runner.os }}-pub-
       - name: Install dependencies
         run: flutter pub get
-
       - name: Run tests with coverage
         run: flutter test
 
@@ -56,6 +70,14 @@ jobs:
       - uses: flutter-actions/setup-flutter@v2
         with:
           channel: stable
+      - name: Cache pub packages
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.pub-cache
+            .dart_tool
+          key: ${{ runner.os }}-pub-${{ hashFiles('**/pubspec.lock') }}
+          restore-keys: ${{ runner.os }}-pub-
       - name: Install dependencies
         run: flutter pub get
       - name: Code Coverage

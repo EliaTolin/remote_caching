@@ -169,7 +169,7 @@ A full example is available in the [`example/`](example/) directory. It demonstr
 | Method | Description |
 |--------|-------------|
 | `init({Duration? defaultCacheDuration, bool verboseMode = false})` | Initialize the cache system |
-| `call<T>(String key, {required Future<T> Function() remote, Duration? cacheDuration, bool forceRefresh = false, T Function(Object? json)? fromJson})` | Cache a remote call |
+| `call<T>(String key, {required Future<T> Function() remote, Duration? cacheDuration, DateTime? cacheExpiring, bool forceRefresh = false, T Function(Object? json)? fromJson})` | Cache a remote call |
 | `clearCache()` | Clear all cache |
 | `clearCacheForKey(String key)` | Clear cache for a specific key |
 | `getCacheStats()` | Get cache statistics |

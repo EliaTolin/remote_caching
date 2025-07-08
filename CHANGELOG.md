@@ -1,3 +1,7 @@
+## 1.0.8
+
+* Added databasePath parameter to the call method
+
 ## 1.0.7
 
 * Update docs

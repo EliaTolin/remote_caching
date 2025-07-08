@@ -1,3 +1,7 @@
+## 1.0.12
+
+* Added new docs
+
 ## 1.0.11
 
 * Added new docs

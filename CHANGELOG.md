@@ -1,3 +1,8 @@
+## 1.0.9
+
+* Added getInMemoryDatabasePath function
+* Added databasePath parameter to the init method
+
 ## 1.0.8
 
 * Added databasePath parameter to the call method

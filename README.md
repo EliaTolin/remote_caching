@@ -167,6 +167,7 @@ await RemoteCaching.instance.init(
 ```
 
 This will create a non-persistent in-memory cache, meaning all cached data will be lost on app restart.
+
 ⚠️ Avoid storing large datasets in memory, especially on mobile devices, as available RAM can be limited.
 
 ---

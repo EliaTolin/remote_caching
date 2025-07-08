@@ -60,12 +60,13 @@ class RemoteCaching {
   Future<void> init({
     Duration? defaultCacheDuration,
     bool verboseMode = kDebugMode,
+    String? databasePath,
   }) async {
     if (_isInitialized) return;
 
     _defaultCacheDuration = defaultCacheDuration ?? _defaultCacheDuration;
     _verboseMode = verboseMode;
-    _database = await _initDatabase();
+    _database = await _initDatabase(databasePath);
     _isInitialized = true;
 
     await _cleanupExpiredEntries();
@@ -176,8 +177,8 @@ class RemoteCaching {
   }
 
   /// Initialize the SQLite database
-  Future<Database> _initDatabase() async {
-    final dbPath = await getDatabasesPath();
+  Future<Database> _initDatabase(String? databasePath) async {
+    final dbPath = databasePath ?? await getDatabasesPath();
     final path = join(dbPath, 'remote_caching.db');
 
     return openDatabase(

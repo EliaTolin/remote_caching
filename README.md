@@ -77,6 +77,7 @@ flutter pub get
 await RemoteCaching.instance.init(
   defaultCacheDuration: Duration(hours: 1), // Optional
   verboseMode: true, // Optional: see RemoteCaching logs in your console, default is enabled only in debug mode
+  databasePath: '/path/to/your/database.db', // Optional: specify a custom database path.
 );
 ```
 

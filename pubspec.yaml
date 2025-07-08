@@ -2,6 +2,17 @@ name: remote_caching
 description: "A Flutter package for caching remote API calls with configurable duration."
 version: 1.0.11
 repository: https://github.com/eliatolin/remote_caching
+issue_tracker: https://github.com/eliatolin/remote_caching/issues
+topics:
+  - network
+  - http
+  - caching
+  - remote
+
+screenshots:
+  - description: 'Remote caching logo.'
+    path: assets/logo.png
+
 platforms:
   android:
   ios:

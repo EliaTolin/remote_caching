@@ -49,6 +49,7 @@ class _AgePredictionPageState extends State<AgePredictionPage> {
       await RemoteCaching.instance.init(
         defaultCacheDuration: const Duration(minutes: 30),
         verboseMode: true,
+        databasePath: getInMemoryDatabasePath(),
       );
     } catch (e) {
       setState(() {

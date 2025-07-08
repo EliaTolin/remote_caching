@@ -45,7 +45,7 @@ jobs:
         run: flutter pub get
 
       - name: Run tests with coverage
-        run: flutter test
+        run: flutter test --concurrency=1
 
   coverage:
     name: Code Coverage
@@ -59,7 +59,7 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
       - name: Code Coverage
-        run: flutter test --coverage --coverage-path lcov.info
+        run: flutter test  --concurrency=1 --coverage --coverage-path lcov.info
       - name: Upload Coverage
         uses: codecov/codecov-action@v5
         with:

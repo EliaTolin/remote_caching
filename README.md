@@ -154,6 +154,20 @@ await RemoteCaching.instance.clearCacheForKey('user_profile'); // By key
 final stats = await RemoteCaching.instance.getCacheStats();
 print(stats); // CachingStats(totalEntries: 3, totalSizeBytes: 1234, expiredEntries: 1)
 ```
+---
+
+### 💡 Use in-memory database (optional)
+
+If you want to initialize Remote Caching in memory, you can pass getInMemoryDatabasePath() to the init() method:
+
+```dart
+await RemoteCaching.instance.init(
+  databasePath: getInMemoryDatabasePath(),
+);
+```
+
+This will create a non-persistent in-memory cache, meaning all cached data will be lost on app restart.
+⚠️ Avoid storing large datasets in memory, especially on mobile devices, as available RAM can be limited.
 
 ---
 
@@ -169,7 +183,7 @@ A full example is available in the [`example/`](example/) directory. It demonstr
 
 | Method | Description |
 |--------|-------------|
-| `init({Duration? defaultCacheDuration, bool verboseMode = false})` | Initialize the cache system |
+| `init({Duration? defaultCacheDuration, bool verboseMode = false, String? databasePath})` | Initialize the cache system |
 | `call<T>(String key, {required Future<T> Function() remote, Duration? cacheDuration, DateTime? cacheExpiring, bool forceRefresh = false, T Function(Object? json)? fromJson})` | Cache a remote call |
 | `clearCache()` | Clear all cache |
 | `clearCacheForKey(String key)` | Clear cache for a specific key |
@@ -191,6 +205,13 @@ A: Cached data is available offline until it expires or is cleared.
 
 **Q: Does it work on all platforms?**  
 A: We use [sqlite3](https://pub.dev/packages/sqflite) with [sqflite_common_ffi](https://pub.dev/packages/sqflite_common_ffi) to support all platforms. Refer to the packages docs for more information.
+
+**Q: Can I use a custom database path?**  
+A: Yes! You can specify a custom database path using the `databasePath` parameter.
+
+**Q: Why use concurrency=1 in the test?**  
+A: We use concurrency=1 in the test to avoid race conditions when reading and writing to the database at the same time.
+Flutter runs tests in parallel when there are multiple test files.
 
 ---
 

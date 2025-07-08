@@ -182,7 +182,7 @@ class RemoteCaching {
     sqfliteFfiInit();
 
     // Imposta il database factory globale
-    databaseFactory = databaseFactoryFfi;
+    databaseFactoryOrNull = databaseFactoryFfi;
 
     final dbPath = databasePath ?? await getDatabasesPath();
     final path = join(dbPath, 'remote_caching.db');

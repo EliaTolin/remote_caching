@@ -1,6 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:remote_caching/remote_caching.dart';
-import 'package:remote_caching/src/common/get_in_memory_database.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 import 'models/test_models.dart';

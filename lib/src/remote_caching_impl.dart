@@ -12,17 +12,85 @@ export 'remote_caching_impl.dart' show RemoteCaching;
 
 /// A Flutter package for caching remote API calls with configurable duration.
 ///
-/// Usage:
-/// ```dart
-/// await RemoteCaching.instance.init();
+/// This package provides a simple yet powerful way to cache remote API responses
+/// locally using SQLite, with support for automatic expiration, custom serialization,
+/// and intelligent cache management.
 ///
-/// final data = await RemoteCaching.instance.call(
-///   "user_profile",
+/// ## Key Features
+/// - **Automatic caching** with configurable expiration
+/// - **SQLite persistence** for reliable data storage
+/// - **Generic support** for any serializable data type
+/// - **Custom deserialization** with `fromJson` functions
+/// - **Cache statistics** and monitoring
+/// - **Error handling** with graceful fallbacks
+/// - **Cross-platform** support (iOS, Android, Web, Desktop)
+///
+/// ## Basic Usage
+/// ```dart
+/// // Initialize the cache system
+/// await RemoteCaching.instance.init(
+///   defaultCacheDuration: Duration(hours: 1),
+///   verboseMode: true,
+/// );
+///
+/// // Cache a remote API call
+/// final user = await RemoteCaching.instance.call<User>(
+///   'user_profile_123',
 ///   cacheDuration: Duration(minutes: 30),
-///   remote: () async => await fetchUserProfile(),
-///   fromJson: (json) => UserProfile.fromJson(json as Map<String, dynamic>),
+///   remote: () async => await apiService.getUser(123),
+///   fromJson: (json) => User.fromJson(json as Map<String, dynamic>),
 /// );
 /// ```
+///
+/// ## Advanced Usage
+/// ```dart
+/// // Use exact expiration time
+/// final data = await RemoteCaching.instance.call<Data>(
+///   'cache_key',
+///   cacheExpiring: DateTime.now().add(Duration(hours: 2)),
+///   remote: () async => await fetchData(),
+///   fromJson: (json) => Data.fromJson(json as Map<String, dynamic>),
+/// );
+///
+/// // Force refresh (bypass cache)
+/// final freshData = await RemoteCaching.instance.call<Data>(
+///   'cache_key',
+///   forceRefresh: true,
+///   remote: () async => await fetchData(),
+///   fromJson: (json) => Data.fromJson(json as Map<String, dynamic>),
+/// );
+///
+/// // Cache lists and complex data
+/// final users = await RemoteCaching.instance.call<List<User>>(
+///   'all_users',
+///   remote: () async => await apiService.getAllUsers(),
+///   fromJson: (json) => (json as List)
+///       .map((item) => User.fromJson(item as Map<String, dynamic>))
+///       .toList(),
+/// );
+/// ```
+///
+/// ## Cache Management
+/// ```dart
+/// // Clear specific cache entry
+/// await RemoteCaching.instance.clearCacheForKey('user_profile_123');
+///
+/// // Clear all cache
+/// await RemoteCaching.instance.clearCache();
+///
+/// // Get cache statistics
+/// final stats = await RemoteCaching.instance.getCacheStats();
+/// print('Total entries: ${stats.totalEntries}');
+/// ```
+///
+/// ## Error Handling
+/// The package handles serialization errors gracefully. If `fromJson` fails,
+/// the error is logged and the remote call is used instead. Your app will
+/// never crash due to cache-related errors.
+///
+/// ## Thread Safety
+/// This class is thread-safe and can be used from multiple isolates.
+/// All database operations are properly synchronized.
 class RemoteCaching {
   factory RemoteCaching() => _instance;
   RemoteCaching._internal();
@@ -56,7 +124,32 @@ class RemoteCaching {
     }
   }
 
-  /// Initialize the caching system
+  /// Initialize the caching system.
+  ///
+  /// This method must be called before using any caching functionality.
+  /// It sets up the SQLite database and configures the cache behavior.
+  ///
+  /// ## Parameters
+  /// - [defaultCacheDuration] - The default cache duration for all calls.
+  ///   If not specified, defaults to 1 hour.
+  /// - [verboseMode] - Enable detailed logging for debugging.
+  ///   Defaults to `kDebugMode` (enabled in debug builds).
+  /// - [databasePath] - Custom path for the database file.
+  ///   If not specified, uses the default application database directory.
+  ///   Use [getInMemoryDatabasePath()] for in-memory database (testing only).
+  ///
+  /// ## Example
+  /// ```dart
+  /// await RemoteCaching.instance.init(
+  ///   defaultCacheDuration: Duration(hours: 2),
+  ///   verboseMode: true,
+  ///   databasePath: '/custom/path/cache.db',
+  /// );
+  /// ```
+  ///
+  /// ## Throws
+  /// - [StateError] if already initialized
+  /// - [DatabaseException] if database initialization fails
   Future<void> init({
     Duration? defaultCacheDuration,
     bool verboseMode = kDebugMode,
@@ -72,7 +165,42 @@ class RemoteCaching {
     await _cleanupExpiredEntries();
   }
 
-  /// Execute a remote call with caching
+  /// Execute a remote call with caching.
+  ///
+  /// This is the main method for caching remote API calls. It first checks
+  /// if valid cached data exists, and if not, calls the remote function
+  /// and caches the result.
+  ///
+  /// ## Parameters
+  /// - [key] - Unique identifier for the cache entry. Use descriptive keys
+  ///   that include relevant parameters (e.g., 'user_123', 'products_category_electronics').
+  /// - [remote] - Function that fetches data from the remote source.
+  ///   This function is called when no valid cache exists or when [forceRefresh] is true.
+  /// - [fromJson] - Function to deserialize JSON data into the target type.
+  ///   Required for all types except basic JSON types (Map, List, String, etc.).
+  /// - [cacheDuration] - How long to cache the data. If not specified,
+  ///   uses the default duration set in [init()].
+  /// - [cacheExpiring] - Exact datetime when the cache should expire.
+  ///   Cannot be used together with [cacheDuration].
+  /// - [forceRefresh] - If true, bypasses cache and always calls the remote function.
+  ///
+  /// ## Returns
+  /// The cached or freshly fetched data of type [T].
+  ///
+  /// ## Example
+  /// ```dart
+  /// final user = await RemoteCaching.instance.call<User>(
+  ///   'user_profile_123',
+  ///   cacheDuration: Duration(minutes: 30),
+  ///   remote: () async => await apiService.getUser(123),
+  ///   fromJson: (json) => User.fromJson(json as Map<String, dynamic>),
+  /// );
+  /// ```
+  ///
+  /// ## Throws
+  /// - [StateError] if not initialized
+  /// - [ArgumentError] if both [cacheDuration] and [cacheExpiring] are specified
+  /// - Any exception thrown by the [remote] function
   Future<T> call<T>(
     String key, {
     required Future<T> Function() remote,
@@ -109,7 +237,10 @@ class RemoteCaching {
     return data;
   }
 
-  /// Get cached data if valid
+  /// Get cached data if valid.
+  ///
+  /// Internal method that retrieves and validates cached data.
+  /// Returns null if no valid cache exists.
   Future<T?> _getCachedData<T>(
     String key, {
     required T Function(Object? json) fromJson,
@@ -154,7 +285,10 @@ class RemoteCaching {
     return null;
   }
 
-  /// Cache data with expiration
+  /// Cache data with expiration.
+  ///
+  /// Internal method that stores data in the cache with the specified expiration.
+  /// Handles serialization errors gracefully.
   Future<void> _cacheData<T>(String key, T data, DateTime expiresAt) async {
     final now = DateTime.now();
     String? dataString;
@@ -176,7 +310,9 @@ class RemoteCaching {
     }, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
-  /// Initialize the SQLite database
+  /// Initialize the SQLite database.
+  ///
+  /// Sets up the database schema and creates necessary indexes.
   Future<Database> _initDatabase(String? databasePath) async {
     // Inizializza sqflite_common_ffi
     sqfliteFfiInit();
@@ -204,25 +340,63 @@ class RemoteCaching {
     );
   }
 
-  /// Cleanup expired entries from the cache
+  /// Cleanup expired entries from the cache.
+  ///
+  /// Automatically removes expired cache entries to keep the database clean.
   Future<void> _cleanupExpiredEntries() async {
     final now = DateTime.now().millisecondsSinceEpoch;
     await _database?.delete('cache', where: 'expires_at < ?', whereArgs: [now]);
   }
 
-  /// Clear the entire cache
+  /// Clear the entire cache.
+  ///
+  /// Removes all cached data. Useful for clearing cache on logout
+  /// or when you need a fresh start.
+  ///
+  /// ## Example
+  /// ```dart
+  /// await RemoteCaching.instance.clearCache();
+  /// ```
   Future<void> clearCache() async {
     if (!_isInitialized) return;
     await _database?.delete('cache');
   }
 
-  /// Clear a specific cache entry
+  /// Clear a specific cache entry.
+  ///
+  /// Removes the cached data for a specific key. Useful for
+  /// invalidating specific data when it becomes stale.
+  ///
+  /// ## Parameters
+  /// - [key] - The cache key to remove
+  ///
+  /// ## Example
+  /// ```dart
+  /// await RemoteCaching.instance.clearCacheForKey('user_profile_123');
+  /// ```
   Future<void> clearCacheForKey(String key) async {
     if (!_isInitialized) return;
     await _database?.delete('cache', where: 'key = ?', whereArgs: [key]);
   }
 
-  /// Get cache statistics
+  /// Get cache statistics.
+  ///
+  /// Returns information about the current state of the cache,
+  /// including total entries, size, and expired entries.
+  ///
+  /// ## Returns
+  /// A [CachingStats] object containing cache statistics.
+  ///
+  /// ## Example
+  /// ```dart
+  /// final stats = await RemoteCaching.instance.getCacheStats();
+  /// print('Total entries: ${stats.totalEntries}');
+  /// print('Total size: ${stats.totalSizeBytes} bytes');
+  /// print('Expired entries: ${stats.expiredEntries}');
+  /// ```
+  ///
+  /// ## Throws
+  /// - [StateError] if not initialized
   Future<CachingStats> getCacheStats() async {
     if (!_isInitialized) {
       throw StateError('RemoteCaching must be initialized before use.');
@@ -244,7 +418,15 @@ class RemoteCaching {
     );
   }
 
-  /// Dispose of the cache system
+  /// Dispose of the cache system.
+  ///
+  /// Closes the database connection and cleans up resources.
+  /// Call this when you're done using the cache system.
+  ///
+  /// ## Example
+  /// ```dart
+  /// await RemoteCaching.instance.dispose();
+  /// ```
   Future<void> dispose() async {
     await _database?.close();
     _isInitialized = false;

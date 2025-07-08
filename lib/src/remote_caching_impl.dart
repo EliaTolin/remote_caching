@@ -5,7 +5,7 @@ import 'dart:developer';
 import 'package:flutter/foundation.dart';
 import 'package:path/path.dart';
 import 'package:remote_caching/src/models/caching_stats.dart';
-import 'package:sqflite/sqflite.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 // Export the main class
 export 'remote_caching_impl.dart' show RemoteCaching;
@@ -178,6 +178,12 @@ class RemoteCaching {
 
   /// Initialize the SQLite database
   Future<Database> _initDatabase(String? databasePath) async {
+    // Inizializza sqflite_common_ffi
+    sqfliteFfiInit();
+
+    // Imposta il database factory globale
+    databaseFactory = databaseFactoryFfi;
+
     final dbPath = databasePath ?? await getDatabasesPath();
     final path = join(dbPath, 'remote_caching.db');
 

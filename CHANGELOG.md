@@ -1,3 +1,7 @@
+## 1.0.10
+
+* Remove support for web 
+
 ## 1.0.9
 
 * Added getInMemoryDatabasePath function

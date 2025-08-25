@@ -61,7 +61,7 @@ A lightweight yet powerful Flutter package for caching asynchronous remote calls
 - 📊 **Cache statistics** and monitoring
 - 🧪 **Test-friendly** with verbose logging and in-memory database support
 - 🛡️ **Error handling** - graceful fallback to remote calls
-- 🔧 **Cross-platform** support (iOS, Android, Web, Desktop)
+- 🔧 **Cross-platform** support (iOS, Android, Desktop)
 
 ## 🎯 Why RemoteCaching?
 

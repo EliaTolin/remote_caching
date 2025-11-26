@@ -1,3 +1,7 @@
+## 1.0.14
+
+* Fix problem about sqflite on Android
+
 ## 1.0.13
 
 * Fix problem about sqflite on Android

@@ -1,11 +1,13 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
+import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:path/path.dart';
 import 'package:remote_caching/src/models/caching_stats.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import 'package:sqlite3_flutter_libs/sqlite3_flutter_libs.dart';
 
 // Export the main class
 export 'remote_caching_impl.dart' show RemoteCaching;
@@ -315,12 +317,22 @@ class RemoteCaching {
   /// Sets up the database schema and creates necessary indexes.
   Future<Database> _initDatabase(String? databasePath) async {
     // Inizializza sqflite_common_ffi
+    if (Platform.isAndroid) {
+      await applyWorkaroundToOpenSqlite3OnOldAndroidVersions();
+    }
+
     sqfliteFfiInit();
 
     // Imposta il database factory globale
     databaseFactoryOrNull = databaseFactoryFfi;
 
     final dbPath = databasePath ?? await getDatabasesPath();
+    if (dbPath != ':memory:') {
+      final dir = Directory(dbPath);
+      if (!dir.existsSync()) {
+        await dir.create(recursive: true);
+      }
+    }
     final path = join(dbPath, 'remote_caching.db');
 
     return openDatabase(

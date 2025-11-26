@@ -1,0 +1,5 @@
+package com.example.remote_caching_example
+
+import io.flutter.embedding.android.FlutterActivity
+
+class MainActivity : FlutterActivity()

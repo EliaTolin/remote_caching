@@ -1,6 +1,6 @@
 name: remote_caching
 description: "A Flutter package for caching remote API calls with configurable duration."
-version: 1.0.12
+version: 1.0.13
 repository: https://github.com/eliatolin/remote_caching
 issue_tracker: https://github.com/eliatolin/remote_caching/issues
 topics:
@@ -30,6 +30,7 @@ dependencies:
   sqflite: ^2.3.0
   path: ^1.8.3
   sqflite_common_ffi: ^2.3.6
+  sqlite3_flutter_libs: ^0.5.40
 
 dev_dependencies:
   flutter_test:

@@ -1,3 +1,10 @@
+## 1.0.17
+
+* Added `onError` callback to `call()` method for custom error handling
+* New `CacheError` class with detailed error information (key, type, error, stackTrace, rawData)
+* New `CacheErrorType` enum for distinguishing serialization vs deserialization errors
+* Backward compatible: errors still fallback gracefully without callback
+
 ## 1.0.16
 
 * Added `CacheStrategy` enum with `cacheFirst` and `networkFirst` strategies
@@ -27,7 +34,7 @@
 
 ## 1.0.10
 
-* Remove support for web 
+* Remove support for web
 
 ## 1.0.9
 

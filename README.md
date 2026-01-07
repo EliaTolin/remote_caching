@@ -54,6 +54,7 @@ A lightweight yet powerful Flutter package for caching asynchronous remote calls
 
 - ✅ **Automatic caching** of remote data with intelligent expiration
 - ⏳ **Flexible expiration** - use duration or exact datetime
+- 🎯 **Cache strategies** - choose between cache-first or network-first approaches
 - 🔄 **Manual cache invalidation** (by key, prefix, or clear all)
 - 💾 **SQLite-powered** persistent cache with automatic cleanup
 - 🧩 **Generic support** for any data type (`Map`, `List`, custom models...)
@@ -194,6 +195,43 @@ final user = await RemoteCaching.instance.call<User>(
   fromJson: (json) => User.fromJson(json as Map<String, dynamic>),
 );
 ```
+
+### 🎯 Cache Strategies
+
+Control how data is retrieved from cache vs remote source using `CacheStrategy`:
+
+#### Cache First (Default)
+
+Uses cached data if available and valid, otherwise fetches from network. Best for data that doesn't change frequently.
+
+```dart
+final user = await RemoteCaching.instance.call<User>(
+  'user_profile_123',
+  strategy: CacheStrategy.cacheFirst, // This is the default
+  remote: () async => await apiService.getUser(123),
+  fromJson: (json) => User.fromJson(json as Map<String, dynamic>),
+);
+```
+
+#### Network First
+
+Always tries network first, falls back to cache (even expired) if network fails. Best for data that changes frequently but should still work offline.
+
+```dart
+final news = await RemoteCaching.instance.call<News>(
+  'latest_news',
+  strategy: CacheStrategy.networkFirst,
+  remote: () async => await newsService.getLatestNews(),
+  fromJson: (json) => News.fromJson(json as Map<String, dynamic>),
+);
+```
+
+**When to use each strategy:**
+
+| Strategy | Use Case |
+|----------|----------|
+| `cacheFirst` | User profiles, settings, static content, data that rarely changes |
+| `networkFirst` | News feeds, live data, app launch when fresh data is preferred |
 
 ### 🧹 Cache Management
 
@@ -460,7 +498,7 @@ The main class for managing remote caching operations.
 | Method | Description | Parameters |
 |--------|-------------|------------|
 | `init()` | Initialize the cache system | `defaultCacheDuration`, `verboseMode`, `databasePath` |
-| `call<T>()` | Cache a remote call | `key`, `remote`, `fromJson`, `cacheDuration`, `cacheExpiring`, `forceRefresh` |
+| `call<T>()` | Cache a remote call | `key`, `remote`, `fromJson`, `cacheDuration`, `cacheExpiring`, `forceRefresh`, `strategy` |
 | `clearCache()` | Clear all cache entries | None |
 | `clearCacheForKey()` | Clear specific cache entry | `key` |
 | `clearCacheByPrefix()` | Clear all entries matching a prefix | `prefix` |
@@ -481,6 +519,18 @@ The main class for managing remote caching operations.
 - `cacheDuration` (Duration?): How long to cache the data
 - `cacheExpiring` (DateTime?): Exact expiration datetime
 - `forceRefresh` (bool): Bypass cache and fetch fresh data
+- `strategy` (CacheStrategy): Cache strategy to use (default: `CacheStrategy.cacheFirst`)
+
+### CacheStrategy Enum
+
+Controls how data is retrieved from cache vs remote source.
+
+```dart
+enum CacheStrategy {
+  cacheFirst,   // Use cache if available, otherwise fetch from network (default)
+  networkFirst, // Always try network first, fall back to cache on failure
+}
+```
 
 ### CachingStats Class
 
@@ -516,8 +566,11 @@ A: Yes! You can specify a custom database path using the `databasePath` paramete
 **Q: How do I handle cache invalidation?**
 A: Use `clearCacheForKey()` for specific entries, `clearCacheByPrefix()` for groups of related entries (e.g., all user data), or `clearCache()` for all entries. You can also use `forceRefresh: true` to bypass cache for a single call.
 
-**Q: What's the difference between `cacheDuration` and `cacheExpiring`?**  
+**Q: What's the difference between `cacheDuration` and `cacheExpiring`?**
 A: `cacheDuration` sets expiration relative to now (e.g., 30 minutes from now), while `cacheExpiring` sets an absolute expiration datetime.
+
+**Q: What's the difference between `cacheFirst` and `networkFirst` strategies?**
+A: `cacheFirst` returns cached data immediately if available (faster, less network usage). `networkFirst` always tries the network first for fresh data, falling back to cache (even expired) if the network fails. Use `cacheFirst` for static data and `networkFirst` for frequently changing data.
 
 **Q: Can I cache different types of data?**  
 A: Yes! You can cache any serializable data: primitives, maps, lists, custom objects, etc. Just provide the appropriate `fromJson` function.

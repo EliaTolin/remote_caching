@@ -5,6 +5,7 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:path/path.dart';
+import 'package:remote_caching/src/models/cache_strategy.dart';
 import 'package:remote_caching/src/models/caching_stats.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:sqlite3_flutter_libs/sqlite3_flutter_libs.dart';
@@ -172,9 +173,9 @@ class RemoteCaching {
 
   /// Execute a remote call with caching.
   ///
-  /// This is the main method for caching remote API calls. It first checks
-  /// if valid cached data exists, and if not, calls the remote function
-  /// and caches the result.
+  /// This is the main method for caching remote API calls. The behavior depends
+  /// on the [strategy] parameter which controls how data is retrieved from
+  /// cache vs remote source.
   ///
   /// ## Parameters
   /// - [key] - Unique identifier for the cache entry. Use descriptive keys
@@ -188,24 +189,36 @@ class RemoteCaching {
   /// - [cacheExpiring] - Exact datetime when the cache should expire.
   ///   Cannot be used together with [cacheDuration].
   /// - [forceRefresh] - If true, bypasses cache and always calls the remote function.
+  /// - [strategy] - The caching strategy to use. Defaults to [CacheStrategy.cacheFirst].
+  ///   - [CacheStrategy.cacheFirst]: Uses cache if available, otherwise fetches from network.
+  ///   - [CacheStrategy.networkFirst]: Always tries network first, falls back to cache on failure.
   ///
   /// ## Returns
   /// The cached or freshly fetched data of type [T].
   ///
   /// ## Example
   /// ```dart
+  /// // Default cache-first strategy
   /// final user = await RemoteCaching.instance.call<User>(
   ///   'user_profile_123',
   ///   cacheDuration: Duration(minutes: 30),
   ///   remote: () async => await apiService.getUser(123),
   ///   fromJson: (json) => User.fromJson(json as Map<String, dynamic>),
   /// );
+  ///
+  /// // Network-first strategy for fresh data with offline fallback
+  /// final news = await RemoteCaching.instance.call<News>(
+  ///   'latest_news',
+  ///   strategy: CacheStrategy.networkFirst,
+  ///   remote: () async => await newsService.getLatest(),
+  ///   fromJson: (json) => News.fromJson(json as Map<String, dynamic>),
+  /// );
   /// ```
   ///
   /// ## Throws
   /// - [StateError] if not initialized
   /// - [ArgumentError] if both [cacheDuration] and [cacheExpiring] are specified
-  /// - Any exception thrown by the [remote] function
+  /// - Any exception thrown by the [remote] function (for networkFirst, only if no cache fallback exists)
   Future<T> call<T>(
     String key, {
     required Future<T> Function() remote,
@@ -213,6 +226,7 @@ class RemoteCaching {
     Duration? cacheDuration,
     DateTime? cacheExpiring,
     bool forceRefresh = false,
+    CacheStrategy strategy = CacheStrategy.cacheFirst,
   }) async {
     if (!_isInitialized) {
       throw StateError('RemoteCaching must be initialized before use.');
@@ -227,6 +241,37 @@ class RemoteCaching {
         cacheExpiring ??
         DateTime.now().add(cacheDuration ?? _defaultCacheDuration);
 
+    switch (strategy) {
+      case CacheStrategy.cacheFirst:
+        return _executeCacheFirst<T>(
+          key,
+          remote: remote,
+          fromJson: fromJson,
+          expiresAt: expiresAt,
+          forceRefresh: forceRefresh,
+        );
+      case CacheStrategy.networkFirst:
+        return _executeNetworkFirst<T>(
+          key,
+          remote: remote,
+          fromJson: fromJson,
+          expiresAt: expiresAt,
+          forceRefresh: forceRefresh,
+        );
+    }
+  }
+
+  /// Execute cache-first strategy.
+  ///
+  /// Tries to return cached data first. If no valid cache exists,
+  /// fetches from remote and caches the result.
+  Future<T> _executeCacheFirst<T>(
+    String key, {
+    required Future<T> Function() remote,
+    required T Function(Object? json) fromJson,
+    required DateTime expiresAt,
+    required bool forceRefresh,
+  }) async {
     if (!forceRefresh) {
       final cached = await _getCachedData<T>(key, fromJson: fromJson);
       if (cached != null) {
@@ -240,6 +285,41 @@ class RemoteCaching {
     await _cacheData(key, data, expiresAt);
     _logInfo('Data cached for key: $key');
     return data;
+  }
+
+  /// Execute network-first strategy.
+  ///
+  /// Tries to fetch from remote first. If network fails, falls back to
+  /// cached data (even if expired). If no cache exists, rethrows the error.
+  Future<T> _executeNetworkFirst<T>(
+    String key, {
+    required Future<T> Function() remote,
+    required T Function(Object? json) fromJson,
+    required DateTime expiresAt,
+    required bool forceRefresh,
+  }) async {
+    try {
+      final data = await remote();
+      _logInfo('Data fetched from remote for key: $key');
+      await _cacheData(key, data, expiresAt);
+      _logInfo('Data cached for key: $key');
+      return data;
+    } catch (e, st) {
+      _logError('Network error for key $key: $e', stackTrace: st);
+
+      // Try to get cached data as fallback (even if expired)
+      final cached = await _getCachedDataWithFallback<T>(
+        key,
+        fromJson: fromJson,
+      );
+      if (cached != null) {
+        _logInfo('Falling back to cached data for key: $key');
+        return cached;
+      }
+
+      // No cache available, rethrow the original error
+      rethrow;
+    }
   }
 
   /// Get cached data if valid.
@@ -287,6 +367,44 @@ class RemoteCaching {
       }
     }
     _logInfo('No cached data found for key: $key');
+    return null;
+  }
+
+  /// Get cached data even if expired (for networkFirst fallback).
+  ///
+  /// Internal method that retrieves cached data regardless of expiration.
+  /// Used by networkFirst strategy as a fallback when network fails.
+  Future<T?> _getCachedDataWithFallback<T>(
+    String key, {
+    required T Function(Object? json) fromJson,
+  }) async {
+    final result = await _database?.query(
+      'cache',
+      where: 'key = ?',
+      whereArgs: [key],
+    );
+
+    if (result != null && result.isNotEmpty) {
+      final dataString = result.first['data']! as String;
+      try {
+        final decoded = jsonDecode(dataString);
+        try {
+          return fromJson(decoded);
+        } catch (e, st) {
+          _logError(
+            'Deserialization error (fromJson) for key $key: $e',
+            stackTrace: st,
+          );
+          return null;
+        }
+      } catch (e, st) {
+        _logError(
+          'Deserialization error (jsonDecode) for key $key: $e',
+          stackTrace: st,
+        );
+        return null;
+      }
+    }
     return null;
   }
 

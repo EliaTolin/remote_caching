@@ -1,3 +1,10 @@
+## 1.0.16
+
+* Added `CacheStrategy` enum with `cacheFirst` and `networkFirst` strategies
+* New `strategy` parameter in `call()` method for fine-grained cache control
+* `networkFirst` strategy fetches fresh data and falls back to cache (even expired) on failure
+* Backward compatible: default strategy remains `cacheFirst`
+
 ## 1.0.15
 
 * Added `clearCacheByPrefix()` method to clear all cache entries matching a prefix

@@ -77,6 +77,9 @@ export 'remote_caching_impl.dart' show RemoteCaching;
 /// // Clear specific cache entry
 /// await RemoteCaching.instance.clearCacheForKey('user_profile_123');
 ///
+/// // Clear all cache entries with a specific prefix
+/// final deleted = await RemoteCaching.instance.clearCacheByPrefix('user_');
+///
 /// // Clear all cache
 /// await RemoteCaching.instance.clearCache();
 ///
@@ -389,6 +392,36 @@ class RemoteCaching {
   Future<void> clearCacheForKey(String key) async {
     if (!_isInitialized) return;
     await _database?.delete('cache', where: 'key = ?', whereArgs: [key]);
+  }
+
+  /// Clear all cache entries that start with a specific prefix.
+  ///
+  /// Removes all cached data where the key starts with the given prefix.
+  /// Useful for invalidating groups of related cache entries.
+  ///
+  /// ## Parameters
+  /// - [prefix] - The prefix to match against cache keys
+  ///
+  /// ## Returns
+  /// The number of deleted entries.
+  ///
+  /// ## Example
+  /// ```dart
+  /// // Clear all user-related cache entries
+  /// final deleted = await RemoteCaching.instance.clearCacheByPrefix('user_');
+  /// print('Deleted $deleted entries');
+  ///
+  /// // Clear all product cache for a specific category
+  /// await RemoteCaching.instance.clearCacheByPrefix('products_category_electronics_');
+  /// ```
+  Future<int> clearCacheByPrefix(String prefix) async {
+    if (!_isInitialized) return 0;
+    final deleted = await _database?.delete(
+      'cache',
+      where: 'key LIKE ?',
+      whereArgs: ['$prefix%'],
+    );
+    return deleted ?? 0;
   }
 
   /// Get cache statistics.

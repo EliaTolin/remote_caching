@@ -130,5 +130,82 @@ void main() {
       expect(stats.totalSizeBytes, equals(0));
       expect(stats.expiredEntries, equals(0));
     });
+
+    test('should clear cache entries by prefix', () async {
+      // Cache entries with different prefixes
+      await RemoteCaching.instance.call<Map<String, dynamic>>(
+        'user_123',
+        remote: () async => {'id': 123, 'name': 'John'},
+        fromJson: (json) => Map<String, dynamic>.from(json! as Map),
+      );
+      await RemoteCaching.instance.call<Map<String, dynamic>>(
+        'user_456',
+        remote: () async => {'id': 456, 'name': 'Jane'},
+        fromJson: (json) => Map<String, dynamic>.from(json! as Map),
+      );
+      await RemoteCaching.instance.call<Map<String, dynamic>>(
+        'product_001',
+        remote: () async => {'id': '001', 'name': 'Widget'},
+        fromJson: (json) => Map<String, dynamic>.from(json! as Map),
+      );
+
+      // Clear only user_ prefixed entries
+      final deleted = await RemoteCaching.instance.clearCacheByPrefix('user_');
+
+      expect(deleted, equals(2));
+
+      // Verify user entries are cleared (will call remote again)
+      final newUserData = {'id': 999, 'name': 'New User'};
+      final result1 = await RemoteCaching.instance.call<Map<String, dynamic>>(
+        'user_123',
+        remote: () async => newUserData,
+        fromJson: (json) => Map<String, dynamic>.from(json! as Map),
+      );
+      expect(result1, equals(newUserData));
+
+      // Verify product entry is still cached
+      final result2 = await RemoteCaching.instance.call<Map<String, dynamic>>(
+        'product_001',
+        remote: () async => {'different': 'data'},
+        fromJson: (json) => Map<String, dynamic>.from(json! as Map),
+      );
+      expect(result2['name'], equals('Widget'));
+    });
+
+    test('should return 0 when clearing non-existent prefix', () async {
+      await RemoteCaching.instance.call<String>(
+        'key1',
+        remote: () async => 'value',
+        fromJson: (json) => json! as String,
+      );
+
+      final deleted =
+          await RemoteCaching.instance.clearCacheByPrefix('nonexistent_');
+
+      expect(deleted, equals(0));
+
+      // Verify original entry still exists
+      final stats = await RemoteCaching.instance.getCacheStats();
+      expect(stats.totalEntries, equals(1));
+    });
+
+    test('should clear all entries when prefix matches all keys', () async {
+      const length = 100;
+      for (var i = 0; i < length; i++) {
+        await RemoteCaching.instance.call<String>(
+          'cache_item$i',
+          remote: () async => 'value$i',
+          fromJson: (json) => json! as String,
+        );
+      }
+
+      final deleted =
+          await RemoteCaching.instance.clearCacheByPrefix('cache_');
+
+      expect(deleted, equals(length));
+
+      final stats = await RemoteCaching.instance.getCacheStats();
+      expect(stats.totalEntries, equals(0));
+    });
   });
 }

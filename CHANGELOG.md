@@ -1,3 +1,7 @@
+## 1.0.15
+
+* Added `clearCacheByPrefix()` method to clear all cache entries matching a prefix
+
 ## 1.0.14
 
 * Fix problem about sqflite on Android

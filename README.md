@@ -54,7 +54,7 @@ A lightweight yet powerful Flutter package for caching asynchronous remote calls
 
 - ✅ **Automatic caching** of remote data with intelligent expiration
 - ⏳ **Flexible expiration** - use duration or exact datetime
-- 🔄 **Manual cache invalidation** (by key or clear all)
+- 🔄 **Manual cache invalidation** (by key, prefix, or clear all)
 - 💾 **SQLite-powered** persistent cache with automatic cleanup
 - 🧩 **Generic support** for any data type (`Map`, `List`, custom models...)
 - 🧰 **Custom deserialization** with `fromJson` functions
@@ -203,6 +203,10 @@ Clear cache entries as needed:
 // Clear specific cache entry
 await RemoteCaching.instance.clearCacheForKey('user_profile_123');
 
+// Clear all cache entries with a specific prefix
+final deleted = await RemoteCaching.instance.clearCacheByPrefix('user_');
+print('Deleted $deleted entries');
+
 // Clear all cache
 await RemoteCaching.instance.clearCache();
 ```
@@ -275,13 +279,22 @@ Implement different cache invalidation patterns:
 
 ```dart
 class CacheManager {
-  // Invalidate related cache entries
+  // Invalidate all cache entries for a specific user using prefix
   Future<void> invalidateUserCache(String userId) async {
-    await RemoteCaching.instance.clearCacheForKey('user_$userId');
-    await RemoteCaching.instance.clearCacheForKey('user_profile_$userId');
-    await RemoteCaching.instance.clearCacheForKey('user_settings_$userId');
+    final deleted = await RemoteCaching.instance.clearCacheByPrefix('user_${userId}_');
+    print('Invalidated $deleted cache entries for user $userId');
   }
-  
+
+  // Invalidate all user-related cache entries
+  Future<void> invalidateAllUsersCache() async {
+    await RemoteCaching.instance.clearCacheByPrefix('user_');
+  }
+
+  // Invalidate a specific cache entry
+  Future<void> invalidateSpecificCache(String key) async {
+    await RemoteCaching.instance.clearCacheForKey(key);
+  }
+
   // Invalidate all cache when user logs out
   Future<void> onUserLogout() async {
     await RemoteCaching.instance.clearCache();
@@ -450,6 +463,7 @@ The main class for managing remote caching operations.
 | `call<T>()` | Cache a remote call | `key`, `remote`, `fromJson`, `cacheDuration`, `cacheExpiring`, `forceRefresh` |
 | `clearCache()` | Clear all cache entries | None |
 | `clearCacheForKey()` | Clear specific cache entry | `key` |
+| `clearCacheByPrefix()` | Clear all entries matching a prefix | `prefix` |
 | `getCacheStats()` | Get cache statistics | None |
 | `dispose()` | Clean up resources | None |
 
@@ -499,8 +513,8 @@ A: We use [sqlite3](https://pub.dev/packages/sqflite) with [sqflite_common_ffi](
 **Q: Can I use a custom database path?**  
 A: Yes! You can specify a custom database path using the `databasePath` parameter in the `init()` method.
 
-**Q: How do I handle cache invalidation?**  
-A: Use `clearCacheForKey()` for specific entries or `clearCache()` for all entries. You can also use `forceRefresh: true` to bypass cache for a single call.
+**Q: How do I handle cache invalidation?**
+A: Use `clearCacheForKey()` for specific entries, `clearCacheByPrefix()` for groups of related entries (e.g., all user data), or `clearCache()` for all entries. You can also use `forceRefresh: true` to bypass cache for a single call.
 
 **Q: What's the difference between `cacheDuration` and `cacheExpiring`?**  
 A: `cacheDuration` sets expiration relative to now (e.g., 30 minutes from now), while `cacheExpiring` sets an absolute expiration datetime.

@@ -61,7 +61,7 @@ A lightweight yet powerful Flutter package for caching asynchronous remote calls
 - 🧰 **Custom deserialization** with `fromJson` functions
 - 📊 **Cache statistics** and monitoring
 - 🧪 **Test-friendly** with verbose logging and in-memory database support
-- 🛡️ **Error handling** - graceful fallback to remote calls
+- 🛡️ **Error handling** - graceful fallback to remote calls with optional error callbacks
 - 🔧 **Cross-platform** support (iOS, Android, Desktop)
 
 ## 🎯 Why RemoteCaching?
@@ -299,7 +299,7 @@ class ProductService {
 
 ### 🛡️ Error Handling
 
-The package handles serialization errors gracefully:
+The package handles serialization errors gracefully. By default, errors are logged and the remote call is used as fallback:
 
 ```dart
 // If serialization fails, the remote call is used instead
@@ -310,6 +310,47 @@ final data = await RemoteCaching.instance.call<ComplexModel>(
   fromJson: (json) => ComplexModel.fromJson(json as Map<String, dynamic>),
 );
 ```
+
+#### Custom Error Handling with `onError`
+
+For more control over error handling, use the `onError` callback to capture and handle cache errors:
+
+```dart
+final data = await RemoteCaching.instance.call<User>(
+  'user_profile',
+  remote: () async => await fetchUser(),
+  fromJson: (json) => User.fromJson(json as Map<String, dynamic>),
+  onError: (error) {
+    // Log to external service (Sentry, Datadog, etc.)
+    analytics.logError('cache_error', {
+      'key': error.key,
+      'type': error.type.name,
+      'message': error.message,
+    });
+
+    // Or handle specific error types
+    switch (error.type) {
+      case CacheErrorType.serialization:
+        print('Failed to save data to cache');
+        break;
+      case CacheErrorType.deserializationJson:
+        print('Cached data is corrupted');
+        break;
+      case CacheErrorType.deserializationFromJson:
+        print('Schema mismatch in cached data');
+        break;
+    }
+  },
+);
+```
+
+The `CacheError` class provides:
+- `key`: The cache key that failed
+- `type`: The type of error (`serialization`, `deserializationJson`, `deserializationFromJson`)
+- `error`: The underlying exception
+- `stackTrace`: Stack trace for debugging
+- `rawData`: The data that failed to serialize/deserialize (if available)
+- `message`: Human-readable error message
 
 ### 🔄 Cache Invalidation Strategies
 
@@ -498,7 +539,7 @@ The main class for managing remote caching operations.
 | Method | Description | Parameters |
 |--------|-------------|------------|
 | `init()` | Initialize the cache system | `defaultCacheDuration`, `verboseMode`, `databasePath` |
-| `call<T>()` | Cache a remote call | `key`, `remote`, `fromJson`, `cacheDuration`, `cacheExpiring`, `forceRefresh`, `strategy` |
+| `call<T>()` | Cache a remote call | `key`, `remote`, `fromJson`, `cacheDuration`, `cacheExpiring`, `forceRefresh`, `strategy`, `onError` |
 | `clearCache()` | Clear all cache entries | None |
 | `clearCacheForKey()` | Clear specific cache entry | `key` |
 | `clearCacheByPrefix()` | Clear all entries matching a prefix | `prefix` |
@@ -520,6 +561,7 @@ The main class for managing remote caching operations.
 - `cacheExpiring` (DateTime?): Exact expiration datetime
 - `forceRefresh` (bool): Bypass cache and fetch fresh data
 - `strategy` (CacheStrategy): Cache strategy to use (default: `CacheStrategy.cacheFirst`)
+- `onError` (void Function(CacheError)?): Callback for cache errors
 
 ### CacheStrategy Enum
 
@@ -529,6 +571,31 @@ Controls how data is retrieved from cache vs remote source.
 enum CacheStrategy {
   cacheFirst,   // Use cache if available, otherwise fetch from network (default)
   networkFirst, // Always try network first, fall back to cache on failure
+}
+```
+
+### CacheError Class
+
+Error information for cache operations.
+
+```dart
+class CacheError {
+  final String key;           // Cache key that failed
+  final CacheErrorType type;  // Type of error
+  final Object error;         // Underlying exception
+  final StackTrace stackTrace; // Stack trace
+  final Object? rawData;      // Data that failed (if available)
+  String get message;         // Human-readable error message
+}
+```
+
+### CacheErrorType Enum
+
+```dart
+enum CacheErrorType {
+  serialization,           // jsonEncode failed
+  deserializationJson,     // jsonDecode failed
+  deserializationFromJson, // fromJson function threw
 }
 ```
 
@@ -548,8 +615,11 @@ class CachingStats {
 
 ## ❓ FAQ
 
-**Q: What happens if serialization or deserialization fails?**  
-A: The error is logged, the cache is ignored, and the remote call is used. Your app will never crash due to cache errors.
+**Q: What happens if serialization or deserialization fails?**
+A: By default, the error is logged (in verbose mode), the cache is ignored, and the remote call is used. Your app will never crash due to cache errors. You can use the `onError` callback to capture and handle these errors for logging, metrics, or debugging.
+
+**Q: How can I monitor cache errors in production?**
+A: Use the `onError` callback to send errors to your analytics or monitoring service (Sentry, Datadog, etc.). The callback receives a `CacheError` object with details about the failure.
 
 **Q: Can I use my own model classes?**  
 A: Yes! Just provide a `fromJson` function and ensure your model supports `toJson` when caching. The package relies on `jsonEncode` / `jsonDecode` under the hood.

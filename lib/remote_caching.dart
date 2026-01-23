@@ -23,6 +23,8 @@
 /// - [RemoteCaching] - The main class for managing remote caching operations
 /// - [CachingStats] - Statistics about the current cache state
 /// - [CacheStrategy] - Enum for controlling cache vs network behavior
+/// - [CacheError] - Error information for cache operations
+/// - [CacheErrorType] - Type of cache error that occurred
 /// - [getInMemoryDatabasePath] - Utility for creating in-memory databases (testing)
 ///
 /// For detailed documentation and examples, see the individual class documentation.
@@ -31,6 +33,7 @@ library remote_caching;
 import 'package:remote_caching/remote_caching.dart';
 
 export 'src/common/get_in_memory_database.dart' show getInMemoryDatabasePath;
+export 'src/models/cache_error.dart' show CacheError, CacheErrorType;
 export 'src/models/cache_strategy.dart' show CacheStrategy;
 export 'src/models/caching_stats.dart' show CachingStats;
 export 'src/remote_caching_impl.dart' show RemoteCaching;

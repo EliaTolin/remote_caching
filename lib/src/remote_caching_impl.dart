@@ -5,6 +5,7 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:path/path.dart';
+import 'package:remote_caching/src/models/cache_error.dart';
 import 'package:remote_caching/src/models/cache_strategy.dart';
 import 'package:remote_caching/src/models/caching_stats.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
@@ -192,6 +193,12 @@ class RemoteCaching {
   /// - [strategy] - The caching strategy to use. Defaults to [CacheStrategy.cacheFirst].
   ///   - [CacheStrategy.cacheFirst]: Uses cache if available, otherwise fetches from network.
   ///   - [CacheStrategy.networkFirst]: Always tries network first, falls back to cache on failure.
+  /// - [onError] - Optional callback invoked when serialization or deserialization
+  ///   errors occur. If not provided, errors are logged (in verbose mode) and
+  ///   the remote function is called as fallback. This callback allows you to:
+  ///   - Log errors to external services (Sentry, Datadog, etc.)
+  ///   - Track metrics on cache failures
+  ///   - Debug serialization issues
   ///
   /// ## Returns
   /// The cached or freshly fetched data of type [T].
@@ -213,6 +220,20 @@ class RemoteCaching {
   ///   remote: () async => await newsService.getLatest(),
   ///   fromJson: (json) => News.fromJson(json as Map<String, dynamic>),
   /// );
+  ///
+  /// // With error handling
+  /// final data = await RemoteCaching.instance.call<Data>(
+  ///   'data_key',
+  ///   remote: () async => await fetchData(),
+  ///   fromJson: (json) => Data.fromJson(json as Map<String, dynamic>),
+  ///   onError: (error) {
+  ///     analytics.logError('cache_error', {
+  ///       'key': error.key,
+  ///       'type': error.type.name,
+  ///       'message': error.message,
+  ///     });
+  ///   },
+  /// );
   /// ```
   ///
   /// ## Throws
@@ -227,6 +248,7 @@ class RemoteCaching {
     DateTime? cacheExpiring,
     bool forceRefresh = false,
     CacheStrategy strategy = CacheStrategy.cacheFirst,
+    void Function(CacheError error)? onError,
   }) async {
     if (!_isInitialized) {
       throw StateError('RemoteCaching must be initialized before use.');
@@ -249,6 +271,7 @@ class RemoteCaching {
           fromJson: fromJson,
           expiresAt: expiresAt,
           forceRefresh: forceRefresh,
+          onError: onError,
         );
       case CacheStrategy.networkFirst:
         return _executeNetworkFirst<T>(
@@ -257,6 +280,7 @@ class RemoteCaching {
           fromJson: fromJson,
           expiresAt: expiresAt,
           forceRefresh: forceRefresh,
+          onError: onError,
         );
     }
   }
@@ -271,9 +295,14 @@ class RemoteCaching {
     required T Function(Object? json) fromJson,
     required DateTime expiresAt,
     required bool forceRefresh,
+    void Function(CacheError error)? onError,
   }) async {
     if (!forceRefresh) {
-      final cached = await _getCachedData<T>(key, fromJson: fromJson);
+      final cached = await _getCachedData<T>(
+        key,
+        fromJson: fromJson,
+        onError: onError,
+      );
       if (cached != null) {
         _logInfo('Cached data found for key: $key');
         return cached;
@@ -282,7 +311,7 @@ class RemoteCaching {
 
     final data = await remote();
     _logInfo('Data fetched from remote for key: $key');
-    await _cacheData(key, data, expiresAt);
+    await _cacheData(key, data, expiresAt, onError: onError);
     _logInfo('Data cached for key: $key');
     return data;
   }
@@ -297,11 +326,12 @@ class RemoteCaching {
     required T Function(Object? json) fromJson,
     required DateTime expiresAt,
     required bool forceRefresh,
+    void Function(CacheError error)? onError,
   }) async {
     try {
       final data = await remote();
       _logInfo('Data fetched from remote for key: $key');
-      await _cacheData(key, data, expiresAt);
+      await _cacheData(key, data, expiresAt, onError: onError);
       _logInfo('Data cached for key: $key');
       return data;
     } catch (e, st) {
@@ -311,6 +341,7 @@ class RemoteCaching {
       final cached = await _getCachedDataWithFallback<T>(
         key,
         fromJson: fromJson,
+        onError: onError,
       );
       if (cached != null) {
         _logInfo('Falling back to cached data for key: $key');
@@ -329,6 +360,7 @@ class RemoteCaching {
   Future<T?> _getCachedData<T>(
     String key, {
     required T Function(Object? json) fromJson,
+    void Function(CacheError error)? onError,
   }) async {
     final now = DateTime.now().millisecondsSinceEpoch;
     final result = await _database?.query(
@@ -351,12 +383,30 @@ class RemoteCaching {
               'Deserialization error (fromJson) for key $key: $e',
               stackTrace: st,
             );
+            onError?.call(
+              CacheError(
+                key: key,
+                type: CacheErrorType.deserializationFromJson,
+                error: e,
+                stackTrace: st,
+                rawData: dataString,
+              ),
+            );
             return null;
           }
         } catch (e, st) {
           _logError(
             'Deserialization error (jsonDecode) for key $key: $e',
             stackTrace: st,
+          );
+          onError?.call(
+            CacheError(
+              key: key,
+              type: CacheErrorType.deserializationJson,
+              error: e,
+              stackTrace: st,
+              rawData: dataString,
+            ),
           );
           return null;
         }
@@ -377,6 +427,7 @@ class RemoteCaching {
   Future<T?> _getCachedDataWithFallback<T>(
     String key, {
     required T Function(Object? json) fromJson,
+    void Function(CacheError error)? onError,
   }) async {
     final result = await _database?.query(
       'cache',
@@ -395,12 +446,30 @@ class RemoteCaching {
             'Deserialization error (fromJson) for key $key: $e',
             stackTrace: st,
           );
+          onError?.call(
+            CacheError(
+              key: key,
+              type: CacheErrorType.deserializationFromJson,
+              error: e,
+              stackTrace: st,
+              rawData: dataString,
+            ),
+          );
           return null;
         }
       } catch (e, st) {
         _logError(
           'Deserialization error (jsonDecode) for key $key: $e',
           stackTrace: st,
+        );
+        onError?.call(
+          CacheError(
+            key: key,
+            type: CacheErrorType.deserializationJson,
+            error: e,
+            stackTrace: st,
+            rawData: dataString,
+          ),
         );
         return null;
       }
@@ -412,7 +481,12 @@ class RemoteCaching {
   ///
   /// Internal method that stores data in the cache with the specified expiration.
   /// Handles serialization errors gracefully.
-  Future<void> _cacheData<T>(String key, T data, DateTime expiresAt) async {
+  Future<void> _cacheData<T>(
+    String key,
+    T data,
+    DateTime expiresAt, {
+    void Function(CacheError error)? onError,
+  }) async {
     final now = DateTime.now();
     String? dataString;
     try {
@@ -422,7 +496,16 @@ class RemoteCaching {
         'Serialization error (jsonEncode) for key $key: $e',
         stackTrace: st,
       );
-      return; // Non salvo nulla in cache
+      onError?.call(
+        CacheError(
+          key: key,
+          type: CacheErrorType.serialization,
+          error: e,
+          stackTrace: st,
+          rawData: data,
+        ),
+      );
+      return; // Don't save anything to cache
     }
 
     await _database?.insert('cache', {

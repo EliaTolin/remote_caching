@@ -1,3 +1,8 @@
+## 1.0.18
+
+* Updated iOS deployment target to 13.0
+* Fixed in-memory database path handling: `getInMemoryDatabasePath()` no longer appends the database filename, resolving `SQLITE_CANTOPEN` (error code 14)
+
 ## 1.0.17
 
 * Added `onError` callback to `call()` method for custom error handling

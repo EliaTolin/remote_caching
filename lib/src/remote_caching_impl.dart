@@ -531,13 +531,16 @@ class RemoteCaching {
     databaseFactoryOrNull = databaseFactoryFfi;
 
     final dbPath = databasePath ?? await getDatabasesPath();
-    if (dbPath != ':memory:') {
+    final String path;
+    if (dbPath == inMemoryDatabasePath) {
+      path = inMemoryDatabasePath;
+    } else {
       final dir = Directory(dbPath);
       if (!dir.existsSync()) {
         await dir.create(recursive: true);
       }
+      path = join(dbPath, 'remote_caching.db');
     }
-    final path = join(dbPath, 'remote_caching.db');
 
     return openDatabase(
       path,

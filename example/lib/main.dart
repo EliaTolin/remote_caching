@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -52,6 +53,7 @@ class _AgePredictionPageState extends State<AgePredictionPage> {
         databasePath: getInMemoryDatabasePath(),
       );
     } catch (e) {
+      log(e.toString());
       setState(() {
         _error = 'Failed to initialize caching: $e';
       });
@@ -96,6 +98,7 @@ class _AgePredictionPageState extends State<AgePredictionPage> {
         _isLoading = false;
       });
     } catch (e) {
+      log(e.toString());
       setState(() {
         _error = 'Error: $e';
         _isLoading = false;

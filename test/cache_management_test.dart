@@ -189,6 +189,99 @@ void main() {
       expect(stats.totalEntries, equals(1));
     });
 
+    test('isCached should return true for a valid cached key', () async {
+      await RemoteCaching.instance.call<Map<String, dynamic>>(
+        'user_123',
+        remote: () async => {'name': 'John'},
+        fromJson: (json) => Map<String, dynamic>.from(json! as Map),
+      );
+
+      final result = await RemoteCaching.instance.isCached('user_123');
+      expect(result, isTrue);
+    });
+
+    test('isCached should return false for a non-existent key', () async {
+      final result = await RemoteCaching.instance.isCached('non_existent_key');
+      expect(result, isFalse);
+    });
+
+    test('isCached should return false for an expired key', () async {
+      await RemoteCaching.instance.call<Map<String, dynamic>>(
+        'expired_key',
+        cacheExpiring: DateTime.now().subtract(const Duration(seconds: 1)),
+        remote: () async => {'name': 'John'},
+        fromJson: (json) => Map<String, dynamic>.from(json! as Map),
+      );
+
+      final result = await RemoteCaching.instance.isCached('expired_key');
+      expect(result, isFalse);
+    });
+
+    test('isCached should return false after clearing the key', () async {
+      await RemoteCaching.instance.call<String>(
+        'to_clear',
+        remote: () async => 'value',
+        fromJson: (json) => json! as String,
+      );
+
+      expect(await RemoteCaching.instance.isCached('to_clear'), isTrue);
+
+      await RemoteCaching.instance.clearCacheForKey('to_clear');
+
+      expect(await RemoteCaching.instance.isCached('to_clear'), isFalse);
+    });
+
+    test('isCached should return false after clearCache', () async {
+      await RemoteCaching.instance.call<String>(
+        'key_a',
+        remote: () async => 'value_a',
+        fromJson: (json) => json! as String,
+      );
+      await RemoteCaching.instance.call<String>(
+        'key_b',
+        remote: () async => 'value_b',
+        fromJson: (json) => json! as String,
+      );
+
+      expect(await RemoteCaching.instance.isCached('key_a'), isTrue);
+      expect(await RemoteCaching.instance.isCached('key_b'), isTrue);
+
+      await RemoteCaching.instance.clearCache();
+
+      expect(await RemoteCaching.instance.isCached('key_a'), isFalse);
+      expect(await RemoteCaching.instance.isCached('key_b'), isFalse);
+    });
+
+    test('isCached should return false after clearCacheByPrefix', () async {
+      await RemoteCaching.instance.call<String>(
+        'user_1',
+        remote: () async => 'alice',
+        fromJson: (json) => json! as String,
+      );
+      await RemoteCaching.instance.call<String>(
+        'product_1',
+        remote: () async => 'widget',
+        fromJson: (json) => json! as String,
+      );
+
+      await RemoteCaching.instance.clearCacheByPrefix('user_');
+
+      expect(await RemoteCaching.instance.isCached('user_1'), isFalse);
+      expect(await RemoteCaching.instance.isCached('product_1'), isTrue);
+    });
+
+    test('isCached should return false when not initialized', () async {
+      await RemoteCaching.instance.dispose();
+
+      final result = await RemoteCaching.instance.isCached('any_key');
+      expect(result, isFalse);
+
+      // Re-initialize for tearDown
+      await RemoteCaching.instance.init(
+        databasePath: getInMemoryDatabasePath(),
+      );
+    });
+
     test('should clear all entries when prefix matches all keys', () async {
       const length = 100;
       for (var i = 0; i < length; i++) {

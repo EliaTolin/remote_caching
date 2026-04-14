@@ -1,3 +1,7 @@
+## 1.0.18
+
+* Added `isCached()` method to check if a valid (non-expired) cache entry exists for a given key
+
 ## 1.0.17
 
 * Added `onError` callback to `call()` method for custom error handling

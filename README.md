@@ -233,6 +233,17 @@ final news = await RemoteCaching.instance.call<News>(
 | `cacheFirst` | User profiles, settings, static content, data that rarely changes |
 | `networkFirst` | News feeds, live data, app launch when fresh data is preferred |
 
+### 🔍 Check if a Key is Cached
+
+Check if a valid (non-expired) cache entry exists for a given key:
+
+```dart
+final cached = await RemoteCaching.instance.isCached('user_profile_123');
+if (cached) {
+  print('Data is cached!');
+}
+```
+
 ### 🧹 Cache Management
 
 Clear cache entries as needed:
@@ -540,6 +551,7 @@ The main class for managing remote caching operations.
 |--------|-------------|------------|
 | `init()` | Initialize the cache system | `defaultCacheDuration`, `verboseMode`, `databasePath` |
 | `call<T>()` | Cache a remote call | `key`, `remote`, `fromJson`, `cacheDuration`, `cacheExpiring`, `forceRefresh`, `strategy`, `onError` |
+| `isCached()` | Check if a valid cache entry exists | `key` |
 | `clearCache()` | Clear all cache entries | None |
 | `clearCacheForKey()` | Clear specific cache entry | `key` |
 | `clearCacheByPrefix()` | Clear all entries matching a prefix | `prefix` |

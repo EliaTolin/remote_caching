@@ -667,6 +667,30 @@ class RemoteCaching {
     );
   }
 
+  /// Check if a valid (non-expired) cache entry exists for the given key.
+  ///
+  /// Returns `true` if the key exists in the cache and has not expired.
+  ///
+  /// ## Parameters
+  /// - [key] - The cache key to check
+  ///
+  /// ## Example
+  /// ```dart
+  /// final cached = await RemoteCaching.instance.isCached('user_profile_123');
+  /// if (cached) {
+  ///   print('Data is cached!');
+  /// }
+  /// ```
+  Future<bool> isCached(String key) async {
+    if (!_isInitialized) return false;
+    final now = DateTime.now().millisecondsSinceEpoch;
+    final result = await _database?.rawQuery(
+      'SELECT 1 FROM cache WHERE key = ? AND expires_at > ? LIMIT 1',
+      [key, now],
+    );
+    return result != null && result.isNotEmpty;
+  }
+
   /// Dispose of the cache system.
   ///
   /// Closes the database connection and cleans up resources.

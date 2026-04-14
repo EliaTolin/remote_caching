@@ -1,4 +1,4 @@
-## 1.0.18
+## 1.0.19
 
 * Added `isCached()` method to check if a valid (non-expired) cache entry exists for a given key
 

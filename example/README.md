@@ -27,6 +27,15 @@ This example demonstrates how to use the `remote_caching` package with the Agify
    flutter run
    ```
 
+### Web
+
+Generate the SQLite WebAssembly files once (they are not committed), then run in Chrome:
+
+```bash
+dart run sqflite_common_ffi_web:setup
+flutter run -d chrome --web-port 8080
+```
+
 ## How It Works
 
 1. **Initialization**: The app initializes the RemoteCaching system with a 30-minute default cache duration

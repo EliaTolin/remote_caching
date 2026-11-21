@@ -1,15 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:remote_caching/remote_caching.dart';
-import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 void main() {
   group('RemoteCaching Cache Management Tests', () {
-    setUpAll(() async {
-      // Initialize SQLite for testing
-      sqfliteFfiInit();
-      databaseFactory = databaseFactoryFfi;
-    });
-
     setUp(() async {
       // Clean up before each test
       await RemoteCaching.instance.init(
@@ -179,8 +172,9 @@ void main() {
         fromJson: (json) => json! as String,
       );
 
-      final deleted =
-          await RemoteCaching.instance.clearCacheByPrefix('nonexistent_');
+      final deleted = await RemoteCaching.instance.clearCacheByPrefix(
+        'nonexistent_',
+      );
 
       expect(deleted, equals(0));
 
@@ -292,8 +286,7 @@ void main() {
         );
       }
 
-      final deleted =
-          await RemoteCaching.instance.clearCacheByPrefix('cache_');
+      final deleted = await RemoteCaching.instance.clearCacheByPrefix('cache_');
 
       expect(deleted, equals(length));
 

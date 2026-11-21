@@ -47,6 +47,29 @@ jobs:
       - name: Run tests with coverage
         run: flutter test --concurrency=1
 
+  test-web:
+    name: Test (Web)
+    runs-on: ubuntu-latest
+    needs: analyze
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: flutter-actions/setup-flutter@v2
+        with:
+          channel: stable
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Generate sqlite3.wasm and sqflite_sw.js for the web tests
+        run: dart run sqflite_common_ffi_web:setup --dir test
+
+      - name: Run tests in Chrome (dart2js)
+        run: flutter test --platform chrome --concurrency=1
+
+      - name: Run tests in Chrome (dart2wasm)
+        run: flutter test --platform chrome --wasm --concurrency=1
+
   coverage:
     name: Code Coverage
     needs: test

@@ -1,17 +1,10 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:remote_caching/remote_caching.dart';
-import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 import 'models/test_models.dart';
 
 void main() {
   group('RemoteCaching Data Types Tests', () {
-    setUpAll(() async {
-      // Initialize SQLite for testing
-      sqfliteFfiInit();
-      databaseFactory = databaseFactoryFfi;
-    });
-
     setUp(() async {
       // Clean up before each test
       await RemoteCaching.instance.init(

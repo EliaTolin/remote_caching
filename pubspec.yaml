@@ -8,6 +8,7 @@ topics:
   - http
   - caching
   - remote
+  - web
 
 screenshots:
   - description: 'Remote caching logo.'
@@ -19,18 +20,19 @@ platforms:
   macos:
   linux:
   windows:
+  web:
 
 environment:
-  sdk: ^3.8.1
-  flutter: ">=1.17.0"
+  sdk: ^3.10.0
+  flutter: ">=3.38.0"
 
 dependencies:
   flutter:
     sdk: flutter
-  sqflite: ^2.3.0
-  path: ^1.8.3
-  sqflite_common_ffi: ^2.3.6
-  sqlite3_flutter_libs: ^0.5.40
+  path: ^1.9.0
+  sqflite_common: ^2.5.6
+  sqflite_common_ffi: ^2.4.0
+  sqflite_common_ffi_web: ^1.1.0
 
 dev_dependencies:
   flutter_test:

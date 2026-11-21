@@ -1,3 +1,11 @@
+## 1.1.0
+
+* **Web support**: the cache now works on Flutter web (dart2js and `--wasm`), backed by SQLite WebAssembly persisted in IndexedDB via `sqflite_common_ffi_web`. Run `dart run sqflite_common_ffi_web:setup` in your app (see README)
+* New optional `databaseFactory` parameter in `init()` to provide a custom sqflite `DatabaseFactory`
+* `init()` no longer overrides the global sqflite `databaseFactory` of the host app
+* Upgraded to `sqflite_common_ffi` 2.4 / `sqlite3` 3.x: SQLite is bundled through build hooks, `sqlite3_flutter_libs` and `sqflite` are no longer dependencies
+* Requires Dart 3.10 / Flutter 3.38 or later
+
 ## 1.0.19
 
 * Added `isCached()` method to check if a valid (non-expired) cache entry exists for a given key

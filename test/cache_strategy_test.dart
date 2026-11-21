@@ -1,14 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:remote_caching/remote_caching.dart';
-import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 void main() {
   group('CacheStrategy Tests', () {
-    setUpAll(() async {
-      sqfliteFfiInit();
-      databaseFactory = databaseFactoryFfi;
-    });
-
     setUp(() async {
       await RemoteCaching.instance.init(
         databasePath: getInMemoryDatabasePath(),
@@ -165,20 +159,22 @@ void main() {
         expect(remoteCalls, equals(2));
       });
 
-      test('should rethrow error when network fails and no cache exists',
-          () async {
-        expect(
-          () => RemoteCaching.instance.call<Map<String, dynamic>>(
-            'no_cache_network_fail_key',
-            strategy: CacheStrategy.networkFirst,
-            remote: () async {
-              throw Exception('Network error');
-            },
-            fromJson: (json) => Map<String, dynamic>.from(json! as Map),
-          ),
-          throwsException,
-        );
-      });
+      test(
+        'should rethrow error when network fails and no cache exists',
+        () async {
+          expect(
+            () => RemoteCaching.instance.call<Map<String, dynamic>>(
+              'no_cache_network_fail_key',
+              strategy: CacheStrategy.networkFirst,
+              remote: () async {
+                throw Exception('Network error');
+              },
+              fromJson: (json) => Map<String, dynamic>.from(json! as Map),
+            ),
+            throwsException,
+          );
+        },
+      );
 
       test('should fall back to expired cache when network fails', () async {
         final cachedData = {'expired': 'data'};
@@ -231,23 +227,23 @@ void main() {
         );
 
         // Test cacheFirst - should return cached data (initial)
-        final cacheFirstResult =
-            await RemoteCaching.instance.call<Map<String, dynamic>>(
-          'comparison_cache_first',
-          // ignore: avoid_redundant_argument_values
-          strategy: CacheStrategy.cacheFirst,
-          remote: () async => updatedData,
-          fromJson: (json) => Map<String, dynamic>.from(json! as Map),
-        );
+        final cacheFirstResult = await RemoteCaching.instance
+            .call<Map<String, dynamic>>(
+              'comparison_cache_first',
+              // ignore: avoid_redundant_argument_values
+              strategy: CacheStrategy.cacheFirst,
+              remote: () async => updatedData,
+              fromJson: (json) => Map<String, dynamic>.from(json! as Map),
+            );
 
         // Test networkFirst - should return updated data
-        final networkFirstResult =
-            await RemoteCaching.instance.call<Map<String, dynamic>>(
-          'comparison_network_first',
-          strategy: CacheStrategy.networkFirst,
-          remote: () async => updatedData,
-          fromJson: (json) => Map<String, dynamic>.from(json! as Map),
-        );
+        final networkFirstResult = await RemoteCaching.instance
+            .call<Map<String, dynamic>>(
+              'comparison_network_first',
+              strategy: CacheStrategy.networkFirst,
+              remote: () async => updatedData,
+              fromJson: (json) => Map<String, dynamic>.from(json! as Map),
+            );
 
         expect(
           Map<String, dynamic>.from(cacheFirstResult),

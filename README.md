@@ -62,7 +62,7 @@ A lightweight yet powerful Flutter package for caching asynchronous remote calls
 - 📊 **Cache statistics** and monitoring
 - 🧪 **Test-friendly** with verbose logging and in-memory database support
 - 🛡️ **Error handling** - graceful fallback to remote calls with optional error callbacks
-- 🔧 **Cross-platform** support (iOS, Android, Desktop)
+- 🔧 **Cross-platform** support (iOS, Android, macOS, Linux, Windows, Web)
 
 ## 🎯 Why RemoteCaching?
 
@@ -99,6 +99,28 @@ void main() async {
 }
 ```
 
+### 🌐 Web setup
+
+On the web the cache uses SQLite compiled to WebAssembly
+([sqflite_common_ffi_web](https://pub.dev/packages/sqflite_common_ffi_web)),
+persisted in IndexedDB. Your app must serve two files next to its
+`index.html`. Run once from your app folder (the one containing `web/`):
+
+```bash
+dart run sqflite_common_ffi_web:setup
+```
+
+This creates `web/sqlite3.wasm` and `web/sqflite_sw.js`. Commit them (or run
+the setup in your CI before `flutter build web`). Both `flutter build web` and
+`flutter build web --wasm` are supported. If the files are missing,
+`init()` throws and the browser console explains what is missing.
+
+Notes for the web:
+- There is no file system: `databasePath` is a virtual folder inside IndexedDB.
+- IndexedDB storage is per origin, port included: use a fixed port while
+  debugging (`flutter run -d chrome --web-port 8080`).
+- The cache is shared and safe across tabs (SQLite runs in a shared worker).
+
 ### 3. Cache your first API call
 
 ```dart
@@ -126,14 +148,15 @@ Initialize the cache system with your preferred settings:
 await RemoteCaching.instance.init(
   defaultCacheDuration: Duration(hours: 1), // Default cache duration
   verboseMode: true, // Enable detailed logging (default: kDebugMode)
-  databasePath: '/custom/path/cache.db', // Custom database path (optional)
+  databasePath: '/custom/path', // Custom database directory (optional)
 );
 ```
 
 **Parameters:**
 - `defaultCacheDuration`: Default expiration time for cached items
 - `verboseMode`: Enable detailed logging for debugging
-- `databasePath`: Custom database path (uses default if not specified)
+- `databasePath`: Custom database directory (uses default if not specified). On the web it is a virtual folder inside IndexedDB
+- `databaseFactory`: Custom sqflite `DatabaseFactory` (optional). Defaults to SQLite via FFI on native platforms and SQLite WebAssembly on the web
 
 ### 🔄 Basic Caching
 
@@ -549,7 +572,7 @@ The main class for managing remote caching operations.
 
 | Method | Description | Parameters |
 |--------|-------------|------------|
-| `init()` | Initialize the cache system | `defaultCacheDuration`, `verboseMode`, `databasePath` |
+| `init()` | Initialize the cache system | `defaultCacheDuration`, `verboseMode`, `databasePath`, `databaseFactory` |
 | `call<T>()` | Cache a remote call | `key`, `remote`, `fromJson`, `cacheDuration`, `cacheExpiring`, `forceRefresh`, `strategy`, `onError` |
 | `isCached()` | Check if a valid cache entry exists | `key` |
 | `clearCache()` | Clear all cache entries | None |
@@ -563,7 +586,8 @@ The main class for managing remote caching operations.
 **`init()` parameters:**
 - `defaultCacheDuration` (Duration?): Default expiration time for cached items
 - `verboseMode` (bool): Enable detailed logging (default: `kDebugMode`)
-- `databasePath` (String?): Custom database path
+- `databasePath` (String?): Custom database directory (a virtual folder on the web)
+- `databaseFactory` (DatabaseFactory?): Custom sqflite database factory
 
 **`call<T>()` parameters:**
 - `key` (String): Unique identifier for the cache entry
@@ -640,7 +664,7 @@ A: Yes! Just provide a `fromJson` function and ensure your model supports `toJso
 A: Cached data is available offline until it expires or is cleared.
 
 **Q: Does it work on all platforms?**  
-A: We use [sqlite3](https://pub.dev/packages/sqflite) with [sqflite_common_ffi](https://pub.dev/packages/sqflite_common_ffi) to support all platforms. Refer to the packages docs for more information.
+A: Yes: Android, iOS, macOS, Linux, Windows and Web. Native platforms use [sqflite_common_ffi](https://pub.dev/packages/sqflite_common_ffi) (SQLite is bundled automatically by [sqlite3](https://pub.dev/packages/sqlite3)); the web uses [sqflite_common_ffi_web](https://pub.dev/packages/sqflite_common_ffi_web) (SQLite WebAssembly + IndexedDB, see [Web setup](#-web-setup)).
 
 **Q: Can I use a custom database path?**  
 A: Yes! You can specify a custom database path using the `databasePath` parameter in the `init()` method.

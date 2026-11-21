@@ -1,15 +1,13 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
-import 'dart:io';
 
 import 'package:flutter/foundation.dart';
-import 'package:path/path.dart';
 import 'package:remote_caching/src/models/cache_error.dart';
 import 'package:remote_caching/src/models/cache_strategy.dart';
 import 'package:remote_caching/src/models/caching_stats.dart';
-import 'package:sqflite_common_ffi/sqflite_ffi.dart';
-import 'package:sqlite3_flutter_libs/sqlite3_flutter_libs.dart';
+import 'package:remote_caching/src/platform/database_platform.dart';
+import 'package:sqflite_common/sqlite_api.dart';
 
 // Export the main class
 export 'remote_caching_impl.dart' show RemoteCaching;
@@ -141,16 +139,23 @@ class RemoteCaching {
   ///   If not specified, defaults to 1 hour.
   /// - [verboseMode] - Enable detailed logging for debugging.
   ///   Defaults to `kDebugMode` (enabled in debug builds).
-  /// - [databasePath] - Custom path for the database file.
+  /// - [databasePath] - Custom directory for the database file.
   ///   If not specified, uses the default application database directory.
+  ///   On the web there is no file system: the path is a virtual folder
+  ///   inside IndexedDB.
   ///   Use [getInMemoryDatabasePath()] for in-memory database (testing only).
+  /// - [databaseFactory] - Custom sqflite [DatabaseFactory]. If not specified,
+  ///   SQLite via FFI is used on native platforms and SQLite WebAssembly
+  ///   (persisted in IndexedDB) on the web. On the web the default factory
+  ///   needs `sqlite3.wasm` and `sqflite_sw.js` served next to `index.html`
+  ///   (run `dart run sqflite_common_ffi_web:setup` in your app).
   ///
   /// ## Example
   /// ```dart
   /// await RemoteCaching.instance.init(
   ///   defaultCacheDuration: Duration(hours: 2),
   ///   verboseMode: true,
-  ///   databasePath: '/custom/path/cache.db',
+  ///   databasePath: '/custom/path',
   /// );
   /// ```
   ///
@@ -161,12 +166,13 @@ class RemoteCaching {
     Duration? defaultCacheDuration,
     bool verboseMode = kDebugMode,
     String? databasePath,
+    DatabaseFactory? databaseFactory,
   }) async {
     if (_isInitialized) return;
 
     _defaultCacheDuration = defaultCacheDuration ?? _defaultCacheDuration;
     _verboseMode = verboseMode;
-    _database = await _initDatabase(databasePath);
+    _database = await _initDatabase(databasePath, databaseFactory);
     _isInitialized = true;
 
     await _cleanupExpiredEntries();
@@ -519,34 +525,20 @@ class RemoteCaching {
   /// Initialize the SQLite database.
   ///
   /// Sets up the database schema and creates necessary indexes.
-  Future<Database> _initDatabase(String? databasePath) async {
-    // Inizializza sqflite_common_ffi
-    if (Platform.isAndroid) {
-      await applyWorkaroundToOpenSqlite3OnOldAndroidVersions();
-    }
+  Future<Database> _initDatabase(
+    String? databasePath,
+    DatabaseFactory? databaseFactory,
+  ) async {
+    final factory = databaseFactory ?? defaultDatabaseFactory();
+    final path = await resolveDatabasePath(factory, databasePath);
+    _logInfo('Opening cache database at $path');
 
-    sqfliteFfiInit();
-
-    // Imposta il database factory globale
-    databaseFactoryOrNull = databaseFactoryFfi;
-
-    final dbPath = databasePath ?? await getDatabasesPath();
-    final String path;
-    if (dbPath == inMemoryDatabasePath) {
-      path = inMemoryDatabasePath;
-    } else {
-      final dir = Directory(dbPath);
-      if (!dir.existsSync()) {
-        await dir.create(recursive: true);
-      }
-      path = join(dbPath, 'remote_caching.db');
-    }
-
-    return openDatabase(
+    return factory.openDatabase(
       path,
-      version: 1,
-      onCreate: (db, version) async {
-        await db.execute('''
+      options: OpenDatabaseOptions(
+        version: 1,
+        onCreate: (db, version) async {
+          await db.execute('''
           CREATE TABLE cache (
             key TEXT PRIMARY KEY,
             data TEXT NOT NULL,
@@ -554,8 +546,9 @@ class RemoteCaching {
             expires_at INTEGER NOT NULL
           )
         ''');
-        await db.execute('CREATE INDEX idx_expires_at ON cache (expires_at)');
-      },
+          await db.execute('CREATE INDEX idx_expires_at ON cache (expires_at)');
+        },
+      ),
     );
   }
 
@@ -702,6 +695,7 @@ class RemoteCaching {
   /// ```
   Future<void> dispose() async {
     await _database?.close();
+    _database = null;
     _isInitialized = false;
   }
 }

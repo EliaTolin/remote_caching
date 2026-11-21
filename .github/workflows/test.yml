@@ -9,6 +9,8 @@ on:
       - 'bin/**'
       - 'pubspec.yaml'
       - 'analysis_options.yaml'
+      - 'example/**'
+      - '.github/workflows/test.yml'
   pull_request:
     branches: [main]
     paths:
@@ -17,6 +19,8 @@ on:
       - 'bin/**'
       - 'pubspec.yaml'
       - 'analysis_options.yaml'
+      - 'example/**'
+      - '.github/workflows/test.yml'
 jobs:
   analyze:
     name: Analyze
